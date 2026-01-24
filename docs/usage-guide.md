@@ -40,7 +40,8 @@ pipx install cokodo-agent
 ### Verify Installation
 
 ```bash
-cokodo version
+co version
+# or: cokodo version
 ```
 
 ---
@@ -53,8 +54,10 @@ cokodo version
 # Navigate to your project
 cd my-project
 
-# Run the generator
-cokodo init
+# Run the generator (any of these work)
+co init           # Short alias (recommended)
+cokodo init       # Full name
+cokodo-agent init # Package name
 ```
 
 The CLI will guide you through:
@@ -70,7 +73,12 @@ Fetching protocol...
 ? Project name: my-awesome-app
 ? Brief description: A task management application
 ? Primary tech stack: Python
-? AI tools to configure: [x] Cursor  [x] GitHub Copilot
+? AI tools to configure (at least one required):
+  [x] Cokodo (Protocol Only)    <- Default
+  [ ] Cursor
+  [ ] GitHub Copilot
+  [ ] Claude Projects
+  [ ] Google Antigravity
 
 Generating .agent/
   OK Created .agent/
@@ -88,21 +96,21 @@ Generating .agent/
 ### Quick Mode (Non-Interactive)
 
 ```bash
-# Use all defaults
-cokodo init --yes
+# Use all defaults (Cokodo mode - protocol only)
+co init --yes
 
 # Specify project name and tech stack
-cokodo init --name "MyApp" --stack python --yes
+co init --name "MyApp" --stack python --yes
 
 # Initialize in a specific directory
-cokodo init ./new-project --yes
+co init ./new-project --yes
 ```
 
 ---
 
 ## Command Reference
 
-### `cokodo init [PATH]`
+### `co init [PATH]` (alias: `cokodo init`)
 
 Create `.agent` protocol directory in the target location.
 
@@ -126,27 +134,27 @@ Create `.agent` protocol directory in the target location.
 
 ```bash
 # Interactive initialization
-cokodo init
+co init
 
 # Quick initialization with defaults
-cokodo init -y
+co init -y
 
 # Specify all options
-cokodo init ./my-project -n "My Project" -s python -y
+co init ./my-project -n "My Project" -s python -y
 
 # Force overwrite existing protocol
-cokodo init --force
+co init --force
 
 # Offline mode (use bundled protocol)
-cokodo init --offline
+co init --offline
 ```
 
-### `cokodo version`
+### `co version` (alias: `cokodo version`)
 
 Display version information for CLI and bundled protocol.
 
 ```bash
-$ cokodo version
+$ co version
 cokodo-agent v1.0.0
 
 Protocol versions:

@@ -24,11 +24,13 @@ pipx install cokodo-agent
 # Navigate to your project
 cd my-project
 
-# Run the generator
-cokodo init
+# Run the generator (any of these commands work)
+co init           # Short alias
+cokodo init       # Full name
+cokodo-agent init # Package name
 
 # Or specify a path
-cokodo init ./new-project
+co init ./new-project
 ```
 
 ---
@@ -38,13 +40,13 @@ cokodo init ./new-project
 ### Interactive Mode (Default)
 
 ```bash
-$ cokodo init
+$ co init
 
   Cokodo Agent v1.0.0
   ====================
 
   Fetching protocol...
-    [1/2] GitHub Release... OK (v2.1.0)
+    OK Protocol v2.1.0
 
 ? Project name: my-awesome-app
 ? Brief description: A task management web application
@@ -56,13 +58,15 @@ $ cokodo init
     Mixed
     Other
 
-? AI tools to configure: (space to select)
-  [x] Cursor
-  [x] GitHub Copilot
+? AI tools to configure (at least one required):
+  [x] Cokodo (Protocol Only)    # Default - only .agent/
+  [ ] Cursor
+  [ ] GitHub Copilot
   [ ] Claude Projects
+  [ ] Google Antigravity
 
   Generating .agent/
-  [========================================] 100%
+  OK Created .agent/
 
   Success! Created .agent in /path/to/my-awesome-app
 
@@ -74,19 +78,19 @@ $ cokodo init
 ### Quick Mode
 
 ```bash
-# Use defaults, skip prompts
-cokodo init --yes
+# Use defaults, skip prompts (Cokodo mode - protocol only)
+co init --yes
 
 # Specify options directly
-cokodo init --name "my-app" --stack python
+co init --name "my-app" --stack python -y
 ```
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `cokodo init [path]` | Create .agent in target directory |
-| `cokodo version` | Show version information |
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `co init [path]` | `cokodo init` | Create .agent in target directory |
+| `co version` | `cokodo version` | Show version information |
 
 ### Options
 
@@ -126,26 +130,32 @@ Priority 3: Built-in (offline fallback)
 
 ## Generated Structure
 
+### Cokodo Mode (Default)
+
+Only generates `.agent/` directory:
+
 ```
-your-project/
+my-project/
 +-- .agent/                     # Protocol directory
-|   +-- start-here.md           # * Entry point
-|   +-- quick-reference.md      # Cheat sheet
-|   +-- index.md                # Navigation
-|   +-- manifest.json           # Config
-|   +-- core/                   # Governance rules
-|   +-- project/                # Project-specific
-|   |   +-- context.md          # <- Customized
-|   |   +-- tech-stack.md       # <- Customized
-|   +-- skills/                 # Skill modules
-|   +-- adapters/               # Tool adapters
-|   +-- meta/                   # Protocol evolution
-|   +-- scripts/                # Helper scripts
-|
-+-- .cursorrules                # [Optional] Cursor config
-+-- .github/
-    +-- copilot-instructions.md # [Optional] Copilot config
+    +-- start-here.md           # * Entry point
+    +-- quick-reference.md      # Cheat sheet
+    +-- core/                   # Governance rules
+    +-- project/                # Project-specific (customized)
+    +-- skills/                 # Skill modules
+    +-- adapters/               # Tool adapter templates
+    +-- scripts/                # Helper scripts
 ```
+
+### With AI Tool Adapters
+
+Additional files based on selected tools:
+
+| Tool | Generated File |
+|------|----------------|
+| Cursor | `.cursorrules` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Claude Projects | `.claude/instructions.md` |
+| Google Antigravity | `.agent/rules/` directory |
 
 ---
 

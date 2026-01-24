@@ -96,18 +96,22 @@
 # 安装 cokodo-agent
 pipx install cokodo-agent
 
-# 初始化协议
-cokodo init your-project/
+# 初始化协议（以下命令等效）
+co init my-project/        # 简短命令
+cokodo init my-project/    # 完整命令
+
+# 快速模式（跳过交互）
+co init my-project/ -y
 ```
 
 ### 手动复制
 
 ```bash
 # 复制协议到目标项目
-cp -r .agent your-project/
+cp -r .agent my-project/
 
 # 配置项目上下文
-vim your-project/.agent/project/context.md
+vim my-project/.agent/project/context.md
 
 # 验证协议
 python .agent/scripts/lint-protocol.py
@@ -126,6 +130,7 @@ python .agent/scripts/lint-protocol.py
 
 ## 文档
 
+- [Usage Guide (English)](docs/usage-guide.md)
 - [使用指南 (中文)](docs/usage-guide_cn.md)
 - [Token 对比分析](docs/token-comparison-analysis.md)
 

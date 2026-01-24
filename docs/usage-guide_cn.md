@@ -40,7 +40,8 @@ pipx install cokodo-agent
 ### 验证安装
 
 ```bash
-cokodo version
+co version
+# 或: cokodo version
 ```
 
 ---
@@ -53,8 +54,10 @@ cokodo version
 # 进入项目目录
 cd my-project
 
-# 运行生成器
-cokodo init
+# 运行生成器（以下命令等效）
+co init           # 简短命令（推荐）
+cokodo init       # 完整命令
+cokodo-agent init # 包名命令
 ```
 
 CLI 将引导你完成配置：
@@ -70,7 +73,12 @@ Fetching protocol...
 ? Project name: my-awesome-app
 ? Brief description: 一个任务管理应用
 ? Primary tech stack: Python
-? AI tools to configure: [x] Cursor  [x] GitHub Copilot
+? AI tools to configure (at least one required):
+  [x] Cokodo (Protocol Only)    <- 默认
+  [ ] Cursor
+  [ ] GitHub Copilot
+  [ ] Claude Projects
+  [ ] Google Antigravity
 
 Generating .agent/
   OK Created .agent/
@@ -88,21 +96,21 @@ Generating .agent/
 ### 快速模式（非交互）
 
 ```bash
-# 使用默认值
-cokodo init --yes
+# 使用默认值（Cokodo 模式 - 仅生成协议）
+co init --yes
 
 # 指定项目名和技术栈
-cokodo init --name "MyApp" --stack python --yes
+co init --name "MyApp" --stack python --yes
 
 # 在指定目录初始化
-cokodo init ./new-project --yes
+co init ./new-project --yes
 ```
 
 ---
 
 ## 命令参考
 
-### `cokodo init [PATH]`
+### `co init [PATH]`（别名：`cokodo init`）
 
 在目标位置创建 `.agent` 协议目录。
 
@@ -126,27 +134,27 @@ cokodo init ./new-project --yes
 
 ```bash
 # 交互式初始化
-cokodo init
+co init
 
 # 使用默认值快速初始化
-cokodo init -y
+co init -y
 
 # 指定所有选项
-cokodo init ./my-project -n "My Project" -s python -y
+co init ./my-project -n "My Project" -s python -y
 
 # 强制覆盖已有协议
-cokodo init --force
+co init --force
 
 # 离线模式（使用内置协议）
-cokodo init --offline
+co init --offline
 ```
 
-### `cokodo version`
+### `co version`（别名：`cokodo version`）
 
 显示 CLI 和内置协议的版本信息。
 
 ```bash
-$ cokodo version
+$ co version
 cokodo-agent v1.0.0
 
 Protocol versions:
@@ -157,7 +165,7 @@ Protocol versions:
 
 ## 生成的目录结构
 
-运行 `cokodo init` 后，将创建以下结构：
+运行 `co init` 后，将创建以下结构：
 
 ```
 your-project/

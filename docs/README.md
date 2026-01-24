@@ -122,20 +122,31 @@
 
 ## 🚀 快速开始
 
-### 1. 复制协议到项目
+### 方式一：使用生成器（推荐）
+
+```bash
+# 安装
+pipx install cokodo-agent
+
+# 初始化（以下命令等效）
+co init my-project/
+cokodo init my-project/
+```
+
+### 方式二：手动复制
 
 ```bash
 # 克隆协议仓库
-git clone https://github.com/your-org/agent-protocol.git
+git clone https://github.com/dinwind/agent_protocol.git
 
 # 复制到目标项目
-cp -r agent-protocol/.agent your-project/
+cp -r agent_protocol/.agent my-project/
 ```
 
-### 2. 初始化项目配置
+### 初始化项目配置
 
 ```bash
-cd your-project
+cd my-project
 
 # 修改项目上下文
 vim .agent/project/context.md
