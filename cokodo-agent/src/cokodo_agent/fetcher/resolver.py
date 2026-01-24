@@ -5,10 +5,10 @@ from typing import Tuple, List
 
 from rich.console import Console
 
-from create_agent_protocol.fetcher.base import BaseFetcher, FetcherError
-from create_agent_protocol.fetcher.github import GitHubReleaseFetcher
-from create_agent_protocol.fetcher.remote import RemoteServerFetcher
-from create_agent_protocol.fetcher.builtin import BuiltinFetcher
+from cokodo_agent.fetcher.base import BaseFetcher, FetcherError
+from cokodo_agent.fetcher.github import GitHubReleaseFetcher
+from cokodo_agent.fetcher.remote import RemoteServerFetcher
+from cokodo_agent.fetcher.builtin import BuiltinFetcher
 
 console = Console()
 

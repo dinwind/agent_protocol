@@ -90,6 +90,18 @@
 
 ## 快速开始
 
+### 使用生成器 (推荐)
+
+```bash
+# 安装 cokodo-agent
+pipx install cokodo-agent
+
+# 初始化协议
+cokodo init your-project/
+```
+
+### 手动复制
+
 ```bash
 # 复制协议到目标项目
 cp -r .agent your-project/

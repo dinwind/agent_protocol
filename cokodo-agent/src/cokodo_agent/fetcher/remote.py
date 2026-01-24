@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import Tuple
 
-from create_agent_protocol.config import REMOTE_SERVER_URL
-from create_agent_protocol.fetcher.base import (
+from cokodo_agent.config import REMOTE_SERVER_URL
+from cokodo_agent.fetcher.base import (
     BaseFetcher,
     SourceNotConfiguredError,
 )
@@ -15,7 +15,7 @@ class RemoteServerFetcher(BaseFetcher):
     Fetch protocol from self-hosted remote server.
     
     Reserved for future implementation.
-    Users can configure via CAP_REMOTE_SERVER environment variable.
+    Users can configure via COKODO_REMOTE_SERVER environment variable.
     """
     
     name = "Remote Server"
@@ -37,7 +37,7 @@ class RemoteServerFetcher(BaseFetcher):
         if not self.base_url:
             raise SourceNotConfiguredError(
                 "Remote server not configured. "
-                "Set CAP_REMOTE_SERVER environment variable."
+                "Set COKODO_REMOTE_SERVER environment variable."
             )
         
         raise NotImplementedError(

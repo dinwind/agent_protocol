@@ -1,4 +1,4 @@
-"""CLI commands for create-agent-protocol."""
+"""CLI commands for cokodo-agent."""
 
 from pathlib import Path
 from typing import Optional
@@ -7,15 +7,15 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from create_agent_protocol import __version__
-from create_agent_protocol.config import VERSION, BUNDLED_PROTOCOL_VERSION
-from create_agent_protocol.generator import generate_protocol
-from create_agent_protocol.prompts import prompt_config
-from create_agent_protocol.fetcher import get_protocol
+from cokodo_agent import __version__
+from cokodo_agent.config import VERSION, BUNDLED_PROTOCOL_VERSION
+from cokodo_agent.generator import generate_protocol
+from cokodo_agent.prompts import prompt_config
+from cokodo_agent.fetcher import get_protocol
 
 app = typer.Typer(
-    name="cap",
-    help="Create Agent Protocol - AI collaboration protocol generator",
+    name="cokodo",
+    help="Cokodo Agent - AI collaboration protocol generator",
     add_completion=False,
 )
 console = Console()
@@ -58,7 +58,7 @@ def init(
     # Header
     console.print()
     console.print(Panel.fit(
-        f"[bold blue]Create Agent Protocol[/bold blue] v{VERSION}",
+        f"[bold blue]Cokodo Agent[/bold blue] v{VERSION}",
         border_style="blue",
     ))
     console.print()
@@ -134,7 +134,7 @@ def init(
 @app.command()
 def version():
     """Show version information."""
-    console.print(f"create-agent-protocol v{VERSION}")
+    console.print(f"cokodo-agent v{VERSION}")
     console.print()
     console.print("Protocol versions:")
     console.print(f"  Built-in: v{BUNDLED_PROTOCOL_VERSION}")

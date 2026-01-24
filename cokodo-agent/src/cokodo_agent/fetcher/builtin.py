@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import Tuple
 
-from create_agent_protocol.config import BUNDLED_PROTOCOL_VERSION
-from create_agent_protocol.fetcher.base import (
+from cokodo_agent.config import BUNDLED_PROTOCOL_VERSION
+from cokodo_agent.fetcher.base import (
     BaseFetcher,
     SourceUnavailableError,
 )

@@ -3,8 +3,8 @@
 import pytest
 from pathlib import Path
 
-from create_agent_protocol.fetcher.builtin import BuiltinFetcher
-from create_agent_protocol.fetcher.base import SourceUnavailableError
+from cokodo_agent.fetcher.builtin import BuiltinFetcher
+from cokodo_agent.fetcher.base import SourceUnavailableError
 
 
 class TestBuiltinFetcher:
@@ -32,7 +32,7 @@ class TestGitHubFetcher:
     
     def test_is_available_returns_bool(self):
         """Test is_available returns boolean."""
-        from create_agent_protocol.fetcher.github import GitHubReleaseFetcher
+        from cokodo_agent.fetcher.github import GitHubReleaseFetcher
         
         fetcher = GitHubReleaseFetcher()
         result = fetcher.is_available()

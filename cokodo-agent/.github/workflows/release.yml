@@ -44,7 +44,7 @@ jobs:
     
     environment:
       name: pypi
-      url: https://pypi.org/p/create-agent-protocol
+      url: https://pypi.org/p/cokodo-agent
     
     permissions:
       id-token: write  # Required for trusted publishing

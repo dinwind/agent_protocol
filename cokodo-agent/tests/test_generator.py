@@ -4,8 +4,8 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from create_agent_protocol.generator import generate_protocol
-from create_agent_protocol.fetcher.builtin import BuiltinFetcher
+from cokodo_agent.generator import generate_protocol
+from cokodo_agent.fetcher.builtin import BuiltinFetcher
 
 
 class TestGenerator:

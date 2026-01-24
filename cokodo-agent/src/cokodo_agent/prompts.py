@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, List
 import questionary
 from questionary import Style
 
-from create_agent_protocol.config import TECH_STACKS, AI_TOOLS
+from cokodo_agent.config import TECH_STACKS, AI_TOOLS
 
 # Custom style
 custom_style = Style([

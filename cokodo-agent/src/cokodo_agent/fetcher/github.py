@@ -8,13 +8,13 @@ from typing import Tuple
 
 import httpx
 
-from create_agent_protocol.config import (
+from cokodo_agent.config import (
     GITHUB_API_URL,
     GITHUB_DOWNLOAD_URL,
     GITHUB_REPO,
     DEFAULT_CACHE_DIR,
 )
-from create_agent_protocol.fetcher.base import (
+from cokodo_agent.fetcher.base import (
     BaseFetcher,
     SourceUnavailableError,
 )

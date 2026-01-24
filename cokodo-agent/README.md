@@ -1,4 +1,4 @@
-# Create Agent Protocol
+# Cokodo Agent
 
 A CLI tool to generate standardized AI collaboration protocol (`.agent`) for your projects.
 
@@ -10,10 +10,10 @@ Similar to `create-react-app`, this tool helps you quickly set up an `.agent` di
 
 ```bash
 # Install globally
-pip install create-agent-protocol
+pip install cokodo-agent
 
 # Or use pipx (recommended)
-pipx install create-agent-protocol
+pipx install cokodo-agent
 ```
 
 ---
@@ -25,10 +25,10 @@ pipx install create-agent-protocol
 cd my-project
 
 # Run the generator
-cap init
+cokodo init
 
 # Or specify a path
-cap init ./new-project
+cokodo init ./new-project
 ```
 
 ---
@@ -38,10 +38,10 @@ cap init ./new-project
 ### Interactive Mode (Default)
 
 ```bash
-$ cap init
+$ cokodo init
 
-  Create Agent Protocol v1.0.0
-  ============================
+  Cokodo Agent v1.0.0
+  ====================
 
   Fetching protocol...
     [1/2] GitHub Release... OK (v2.1.0)
@@ -75,18 +75,18 @@ $ cap init
 
 ```bash
 # Use defaults, skip prompts
-cap init --yes
+cokodo init --yes
 
 # Specify options directly
-cap init --name "my-app" --stack python
+cokodo init --name "my-app" --stack python
 ```
 
 ### Commands
 
 | Command | Description |
 |---------|-------------|
-| `cap init [path]` | Create .agent in target directory |
-| `cap version` | Show version information |
+| `cokodo init [path]` | Create .agent in target directory |
+| `cokodo version` | Show version information |
 
 ### Options
 
@@ -155,14 +155,14 @@ your-project/
 
 | Variable | Description |
 |----------|-------------|
-| `CAP_OFFLINE` | Force offline mode (`1` or `true`) |
-| `CAP_CACHE_DIR` | Custom cache directory |
+| `COKODO_OFFLINE` | Force offline mode (`1` or `true`) |
+| `COKODO_CACHE_DIR` | Custom cache directory |
 
 ### Cache Location
 
 Downloaded protocols are cached at:
-- Linux/macOS: `~/.cache/cap/`
-- Windows: `%LOCALAPPDATA%\cap\cache\`
+- Linux/macOS: `~/.cache/cokodo/`
+- Windows: `%LOCALAPPDATA%\cokodo\cache\`
 
 ---
 
@@ -171,7 +171,7 @@ Downloaded protocols are cached at:
 ```bash
 # Clone repository
 git clone https://github.com/dinwind/agent_protocol.git
-cd agent_protocol/create-agent-protocol
+cd agent_protocol/cokodo-agent
 
 # Install in development mode
 pip install -e ".[dev]"

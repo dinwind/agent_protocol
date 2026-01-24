@@ -13,19 +13,19 @@ GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 GITHUB_DOWNLOAD_URL = f"https://github.com/{GITHUB_REPO}/releases/download"
 
 # Remote Server (reserved for future)
-REMOTE_SERVER_URL = os.environ.get("CAP_REMOTE_SERVER", "")
+REMOTE_SERVER_URL = os.environ.get("COKODO_REMOTE_SERVER", "")
 
 # Cache
 DEFAULT_CACHE_DIR = Path(
     os.environ.get(
-        "CAP_CACHE_DIR",
-        Path.home() / ".cache" / "cap" if os.name != "nt" 
-        else Path(os.environ.get("LOCALAPPDATA", Path.home())) / "cap" / "cache"
+        "COKODO_CACHE_DIR",
+        Path.home() / ".cache" / "cokodo" if os.name != "nt" 
+        else Path(os.environ.get("LOCALAPPDATA", Path.home())) / "cokodo" / "cache"
     )
 )
 
 # Offline mode
-OFFLINE_MODE = os.environ.get("CAP_OFFLINE", "").lower() in ("1", "true", "yes")
+OFFLINE_MODE = os.environ.get("COKODO_OFFLINE", "").lower() in ("1", "true", "yes")
 
 # Tech stacks
 TECH_STACKS = {
