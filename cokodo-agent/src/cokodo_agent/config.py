@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 # Version
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 BUNDLED_PROTOCOL_VERSION = "2.1.0"
 
 # GitHub Release

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cokodo-agent"
-version = "1.0.0"
+version = "1.1.0"
 description = "AI Agent Collaboration Protocol Generator - Create standardized .agent protocol for your projects"
 readme = "README.md"
 license = "MIT"
