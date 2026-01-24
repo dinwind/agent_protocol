@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-将 .agent 协议适配为 Google Antigravity 格式
+Adapt .agent protocol for Google Antigravity format
 
-使用方法:
+Usage:
     python .agent/adapters/google-antigravity/adapt_for_antigravity.py
 
-功能:
-    1. 确保 SKILL.md 有正确的 YAML frontmatter
-    2. 在 .agent/rules/ 创建规则引用文件
+Features:
+    1. Ensure SKILL.md has correct YAML frontmatter
+    2. Create rules reference files in .agent/rules/
 
-注意: 协议已标准化使用 SKILL.md（大写），无需重命名。
+Note: Protocol is standardized to use SKILL.md (uppercase), no renaming needed.
 """
 
 import os
@@ -18,21 +18,21 @@ from pathlib import Path
 
 
 def extract_description_from_content(content: str) -> str:
-    """从 markdown 内容中提取描述"""
-    # 尝试提取第一个段落作为描述
+    """Extract description from markdown content."""
+    # Try to extract first paragraph as description
     lines = content.split('\n')
     description_lines = []
     in_content = False
     
     for line in lines:
-        # 跳过 frontmatter
+        # Skip frontmatter
         if line.strip() == '---':
             continue
-        # 跳过标题
+        # Skip headers
         if line.startswith('#'):
             in_content = True
             continue
-        # 收集非空行作为描述
+        # Collect non-empty lines as description
         if in_content and line.strip():
             description_lines.append(line.strip())
             if len(description_lines) >= 2:
@@ -42,36 +42,36 @@ def extract_description_from_content(content: str) -> str:
 
 
 def adapt_skills(agent_root: Path) -> None:
-    """确保 SKILL.md 有正确的 YAML frontmatter"""
+    """Ensure SKILL.md has correct YAML frontmatter."""
     skills_dir = agent_root / "skills"
     
     if not skills_dir.exists():
-        print("⚠️  skills/ 目录不存在，跳过")
+        print("[WARN] skills/ directory not found, skipping")
         return
     
     for skill_dir in skills_dir.iterdir():
         if not skill_dir.is_dir():
             continue
         
-        # 跳过非技能目录
+        # Skip non-skill directories
         if skill_dir.name in ('__pycache__', '.git'):
             continue
         
         skill_file = skill_dir / "SKILL.md"
         
-        # 协议已标准化使用 SKILL.md
+        # Protocol standardized to use SKILL.md
         if not skill_file.exists():
-            print(f"⚠️  跳过: {skill_dir.name} (无 SKILL.md)")
+            print(f"[WARN] Skipped: {skill_dir.name} (no SKILL.md)")
             continue
         
         content = skill_file.read_text(encoding='utf-8')
         
-        # 检查是否已有 frontmatter
+        # Check if frontmatter exists
         if content.startswith('---'):
-            print(f"✅ 已就绪: {skill_dir.name}")
+            print(f"[OK] Ready: {skill_dir.name}")
             continue
         
-        # 添加 frontmatter
+        # Add frontmatter
         skill_name = skill_dir.name
         description = extract_description_from_content(content)
         
@@ -84,34 +84,34 @@ description: |
 """
         content = frontmatter + content
         skill_file.write_text(content, encoding='utf-8')
-        print(f"✅ 添加 frontmatter: {skill_dir.name}")
+        print(f"[OK] Added frontmatter: {skill_dir.name}")
 
 
 def create_rules_references(agent_root: Path) -> None:
-    """创建规则引用文件"""
+    """Create rules reference files."""
     rules_dir = agent_root / "rules"
     rules_dir.mkdir(exist_ok=True)
     
-    # 核心规则文件映射
+    # Core rules file mapping
     mappings = {
         "core-rules.md": {
             "source": "core/core-rules.md",
-            "title": "核心规则",
+            "title": "Core Rules",
             "activation": "Always On"
         },
         "instructions.md": {
             "source": "core/instructions.md",
-            "title": "AI 协作指南",
+            "title": "AI Collaboration Guidelines",
             "activation": "Always On"
         },
         "conventions.md": {
             "source": "core/conventions.md",
-            "title": "命名与 Git 约定",
+            "title": "Naming and Git Conventions",
             "activation": "Model Decision"
         },
         "security.md": {
             "source": "core/security.md",
-            "title": "安全开发规范",
+            "title": "Security Development Standards",
             "activation": "Manual"
         },
     }
@@ -121,109 +121,109 @@ def create_rules_references(agent_root: Path) -> None:
         if not target.exists():
             content = f"""# {config['title']}
 
-> 激活模式: {config['activation']}
+> Activation Mode: {config['activation']}
 
-详细规则请参考:
+For detailed rules, please refer to:
 
 @.agent/{config['source']}
 """
             target.write_text(content, encoding='utf-8')
-            print(f"✅ 创建规则: {rule_name}")
+            print(f"[OK] Created rule: {rule_name}")
         else:
-            print(f"⏭️  规则已存在: {rule_name}")
+            print(f"[SKIP] Rule exists: {rule_name}")
 
 
 def create_project_rule(agent_root: Path) -> None:
-    """创建项目上下文规则"""
+    """Create project context rule."""
     rules_dir = agent_root / "rules"
     rules_dir.mkdir(exist_ok=True)
     
     project_rule = rules_dir / "project-context.md"
     if not project_rule.exists():
-        content = """# 项目上下文
+        content = """# Project Context
 
-> 激活模式: Always On
+> Activation Mode: Always On
 
-项目业务上下文和技术栈信息:
+Project business context and tech stack information:
 
 @.agent/project/context.md
 @.agent/project/tech-stack.md
 @.agent/project/known-issues.md
 """
         project_rule.write_text(content, encoding='utf-8')
-        print("✅ 创建规则: project-context.md")
+        print("[OK] Created rule: project-context.md")
 
 
 def create_readme(agent_root: Path) -> None:
-    """在 rules 目录创建 README"""
+    """Create README in rules directory."""
     rules_dir = agent_root / "rules"
     readme = rules_dir / "README.md"
     
     if not readme.exists():
         content = """# Antigravity Rules
 
-此目录包含 Google Antigravity 的工作区规则。
+This directory contains workspace rules for Google Antigravity.
 
-## 规则说明
+## Rules Description
 
-| 文件 | 说明 | 激活模式 |
-|------|------|----------|
-| `core-rules.md` | 核心开发规则 | Always On |
-| `instructions.md` | AI 协作指南 | Always On |
-| `conventions.md` | 命名与 Git 约定 | Model Decision |
-| `security.md` | 安全开发规范 | Manual (@security) |
-| `project-context.md` | 项目上下文 | Always On |
+| File | Description | Activation Mode |
+|------|-------------|-----------------|
+| `core-rules.md` | Core development rules | Always On |
+| `instructions.md` | AI collaboration guidelines | Always On |
+| `conventions.md` | Naming and Git conventions | Model Decision |
+| `security.md` | Security development standards | Manual (@security) |
+| `project-context.md` | Project context | Always On |
 
-## 激活模式说明
+## Activation Modes
 
-- **Always On**: 始终应用
-- **Manual**: 在对话中使用 @rule-name 手动激活
-- **Model Decision**: 模型根据任务自动决定是否应用
-- **Glob**: 匹配特定文件类型时应用
+- **Always On**: Always applied
+- **Manual**: Manually activate using @rule-name in conversation
+- **Model Decision**: Model decides whether to apply based on task
+- **Glob**: Applied when matching specific file types
 
-## 更多信息
+## More Information
 
-参考 [Google Antigravity Rules 文档](https://antigravity.google/docs/rules-workflows)
+See [Google Antigravity Rules Documentation](https://antigravity.google/docs/rules-workflows)
 """
         readme.write_text(content, encoding='utf-8')
-        print("✅ 创建 rules/README.md")
+        print("[OK] Created rules/README.md")
 
 
 def main():
-    """主函数"""
-    # 查找 .agent 目录
+    """Main function."""
+    # Find .agent directory
     agent_root = Path(".agent")
     if not agent_root.exists():
-        # 尝试从脚本位置推断
+        # Try to infer from script location
         script_path = Path(__file__).resolve()
         agent_root = script_path.parent.parent.parent
     
     if not agent_root.exists() or not (agent_root / "start-here.md").exists():
-        print("❌ 错误: 找不到 .agent 目录")
-        print("   请在项目根目录运行此脚本")
+        print("[ERROR] Cannot find .agent directory")
+        print("   Please run this script from project root")
         return 1
     
-    print("🚀 开始适配 .agent 协议为 Google Antigravity 格式...")
-    print(f"   目标目录: {agent_root.resolve()}")
+    print("Starting .agent to Google Antigravity adaptation...")
+    print(f"   Target: {agent_root.resolve()}")
     print()
     
-    print("📦 适配 Skills...")
+    print("Adapting Skills...")
     adapt_skills(agent_root)
     print()
     
-    print("📋 创建 Rules 引用...")
+    print("Creating Rules references...")
     create_rules_references(agent_root)
     create_project_rule(agent_root)
     create_readme(agent_root)
     print()
     
-    print("✅ 适配完成!")
+    print("[OK] Adaptation complete!")
     print()
-    print("📝 后续步骤:")
-    print("   1. 在 Antigravity 中打开项目")
-    print("   2. 检查 Customizations > Rules 确认规则已加载")
-    print("   3. 检查 Skills 面板确认技能已识别")
-    print("   4. 根据需要调整各规则的激活模式")
+    print("Next steps:")
+    print("   1. Open project in Antigravity")
+    print("   2. Check Customizations > Rules to confirm rules are loaded")
+    print("   3. Check Skills panel to confirm skills are recognized")
+    print("   4. Adjust activation modes as needed")
     
     return 0
 

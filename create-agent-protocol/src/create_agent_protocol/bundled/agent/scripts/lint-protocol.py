@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-协议合规检查脚本
+Protocol Compliance Check Script
 
-检查 .agent 协议层是否符合规范：
-1. 文件命名规范（kebab-case）
-2. 引擎文件污染检测
-3. 必需文件存在性
-4. 内部链接有效性
+Check if .agent protocol layer conforms to standards:
+1. File naming convention (kebab-case)
+2. Engine file pollution detection
+3. Required file existence
+4. Internal link validity
 """
 
 import argparse
@@ -17,7 +17,7 @@ from typing import NamedTuple
 
 
 class LintResult(NamedTuple):
-    """检查结果"""
+    """Check result."""
     rule: str
     passed: bool
     message: str
@@ -26,14 +26,14 @@ class LintResult(NamedTuple):
 
 
 class ProtocolLinter:
-    """协议检查器"""
+    """Protocol linter."""
     
     def __init__(self, agent_dir: Path):
         self.agent_dir = agent_dir
         self.results: list[LintResult] = []
     
     def lint_all(self) -> list[LintResult]:
-        """执行所有检查"""
+        """Execute all checks."""
         self.check_required_files()
         self.check_naming_convention()
         self.check_engine_pollution()
@@ -41,7 +41,7 @@ class ProtocolLinter:
         return self.results
     
     def check_required_files(self) -> None:
-        """检查必需文件"""
+        """Check required files exist."""
         required = [
             "start-here.md",
             "index.md",
@@ -71,8 +71,8 @@ class ProtocolLinter:
                 ))
     
     def check_naming_convention(self) -> None:
-        """检查命名规范"""
-        # kebab-case 模式
+        """Check naming convention."""
+        # kebab-case pattern
         pattern = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
         exceptions = {"MANIFEST.json", "VERSION", "SKILL.md"}
         
@@ -98,13 +98,13 @@ class ProtocolLinter:
                 ))
     
     def check_engine_pollution(self) -> None:
-        """检查引擎文件污染"""
+        """Check engine file pollution."""
         core_dir = self.agent_dir / "core"
         
         if not core_dir.exists():
             return
         
-        # 不应出现在 core/ 的模式
+        # Patterns that should not appear in core/
         pollution_patterns = [
             (r"C:\\\\", "Windows path"),
             (r"D:\\\\", "Windows path"),
@@ -123,7 +123,7 @@ class ProtocolLinter:
                 matches = list(re.finditer(pattern, content))
                 if matches:
                     found_pollution = True
-                    # 计算行号
+                    # Calculate line number
                     for match in matches:
                         line_num = content[:match.start()].count('\n') + 1
                         self.results.append(LintResult(
@@ -143,7 +143,7 @@ class ProtocolLinter:
                 ))
     
     def check_internal_links(self) -> None:
-        """检查内部链接有效性"""
+        """Check internal link validity."""
         link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
         
         for path in self.agent_dir.rglob("*.md"):
@@ -153,17 +153,17 @@ class ProtocolLinter:
             for match in link_pattern.finditer(content):
                 link_text, link_target = match.groups()
                 
-                # 跳过外部链接和锚点
+                # Skip external links and anchors
                 if link_target.startswith(('http://', 'https://', '#', 'mailto:')):
                     continue
                 
-                # 解析相对路径
+                # Parse relative path
                 if link_target.startswith('/'):
                     target_path = self.agent_dir / link_target[1:]
                 else:
                     target_path = path.parent / link_target
                 
-                # 处理锚点
+                # Handle anchors
                 if '#' in str(target_path):
                     target_path = Path(str(target_path).split('#')[0])
                 
@@ -216,11 +216,11 @@ def main():
     linter = ProtocolLinter(agent_dir)
     results = linter.lint_all()
     
-    # 过滤规则
+    # Filter by rule
     if args.rule:
         results = [r for r in results if r.rule == args.rule]
     
-    # 输出结果
+    # Output results
     errors = [r for r in results if not r.passed]
     
     if args.format == "json":
@@ -229,17 +229,17 @@ def main():
     else:
         print(f"=== Protocol Lint Results ===\n")
         
-        # 按规则分组
+        # Group by rule
         rules = set(r.rule for r in results)
         for rule in sorted(rules):
             rule_results = [r for r in results if r.rule == rule]
             passed = sum(1 for r in rule_results if r.passed)
             total = len(rule_results)
             
-            status = "✓" if passed == total else "✗"
-            print(f"[{status}] {rule}: {passed}/{total} passed")
+            status = "[OK]" if passed == total else "[FAIL]"
+            print(f"{status} {rule}: {passed}/{total} passed")
             
-            # 显示错误
+            # Show errors
             for r in rule_results:
                 if not r.passed:
                     loc = f"{r.file}"
@@ -251,10 +251,10 @@ def main():
         print(f"Total: {len(results) - len(errors)}/{len(results)} passed")
         
         if errors:
-            print(f"\n❌ {len(errors)} error(s) found")
+            print(f"\n[ERROR] {len(errors)} error(s) found")
             sys.exit(1)
         else:
-            print(f"\n✓ All checks passed")
+            print(f"\n[OK] All checks passed")
             sys.exit(0)
 
 

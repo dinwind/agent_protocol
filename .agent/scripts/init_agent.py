@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Agent 协议初始化脚本
+Agent Protocol Initialization Script
 
-用于在新项目中初始化 .agent 协议层，包括：
-1. 创建项目实例文件
-2. 生成 AI 工具适配器配置
-3. 验证协议完整性
+Initialize .agent protocol layer in a new project:
+1. Create project instance files
+2. Generate AI tool adapter configurations
+3. Verify protocol integrity
 """
 
 import argparse
@@ -18,14 +18,14 @@ from typing import Any
 
 
 def load_template(template_path: Path) -> str:
-    """加载模板文件"""
+    """Load template file."""
     if not template_path.exists():
         raise FileNotFoundError(f"Template not found: {template_path}")
     return template_path.read_text(encoding="utf-8")
 
 
 def render_template(template: str, variables: dict[str, Any]) -> str:
-    """渲染模板，替换 {{VAR}} 形式的变量"""
+    """Render template, replace {{VAR}} style variables."""
     result = template
     for key, value in variables.items():
         pattern = r"\{\{" + re.escape(key) + r"\}\}"
@@ -34,7 +34,7 @@ def render_template(template: str, variables: dict[str, Any]) -> str:
 
 
 def initialize_project_files(agent_dir: Path, config: dict[str, Any]) -> None:
-    """初始化项目实例文件"""
+    """Initialize project instance files."""
     project_dir = agent_dir / "project"
     
     # context.md
@@ -43,7 +43,7 @@ def initialize_project_files(agent_dir: Path, config: dict[str, Any]) -> None:
         content = load_template(context_template)
         content = render_template(content, config)
         context_template.write_text(content, encoding="utf-8")
-        print(f"  ✓ Updated {context_template}")
+        print(f"  [OK] Updated {context_template}")
     
     # tech-stack.md
     tech_template = project_dir / "tech-stack.md"
@@ -51,7 +51,7 @@ def initialize_project_files(agent_dir: Path, config: dict[str, Any]) -> None:
         content = load_template(tech_template)
         content = render_template(content, config)
         tech_template.write_text(content, encoding="utf-8")
-        print(f"  ✓ Updated {tech_template}")
+        print(f"  [OK] Updated {tech_template}")
 
 
 def generate_adapter(
@@ -60,24 +60,24 @@ def generate_adapter(
     config: dict[str, Any],
     output_dir: Path,
 ) -> None:
-    """生成 AI 工具适配器配置"""
+    """Generate AI tool adapter configuration."""
     adapter_dir = agent_dir / "adapters" / adapter_name
     
     if not adapter_dir.exists():
-        print(f"  ⚠ Adapter not found: {adapter_name}")
+        print(f"  [WARN] Adapter not found: {adapter_name}")
         return
     
-    # 查找模板文件
+    # Find template files
     templates = list(adapter_dir.glob("*.template.md"))
     
     for template_path in templates:
         template_content = load_template(template_path)
         rendered = render_template(template_content, config)
         
-        # 输出文件名（去掉 .template）
+        # Output filename (remove .template)
         output_name = template_path.name.replace(".template", "")
         
-        # 根据适配器类型决定输出位置
+        # Determine output location based on adapter type
         if adapter_name == "github-copilot":
             output_path = output_dir / ".github" / output_name
         else:
@@ -85,11 +85,11 @@ def generate_adapter(
         
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(rendered, encoding="utf-8")
-        print(f"  ✓ Generated {output_path}")
+        print(f"  [OK] Generated {output_path}")
 
 
 def verify_protocol(agent_dir: Path) -> bool:
-    """验证协议完整性"""
+    """Verify protocol integrity."""
     required_files = [
         "start-here.md",
         "index.md",
@@ -107,10 +107,10 @@ def verify_protocol(agent_dir: Path) -> bool:
             missing.append(file)
     
     if missing:
-        print(f"  ✗ Missing files: {', '.join(missing)}")
+        print(f"  [FAIL] Missing files: {', '.join(missing)}")
         return False
     
-    print("  ✓ All required files present")
+    print("  [OK] All required files present")
     return True
 
 
@@ -160,7 +160,7 @@ def main():
         print(f"Error: .agent directory not found at {agent_dir}")
         sys.exit(1)
     
-    # 配置变量
+    # Configuration variables
     config = {
         "PROJECT_NAME": args.project_name,
         "PROJECT_TYPE": args.project_type,
@@ -173,23 +173,23 @@ def main():
     
     print(f"\n=== Initializing Agent Protocol for '{args.project_name}' ===\n")
     
-    # 1. 初始化项目文件
+    # 1. Initialize project files
     print("1. Initializing project files...")
     initialize_project_files(agent_dir, config)
     
-    # 2. 生成适配器配置
+    # 2. Generate adapter configurations
     if args.adapter:
         print("\n2. Generating adapter configs...")
         for adapter in args.adapter:
             generate_adapter(agent_dir, adapter, config, output_dir)
     
-    # 3. 验证协议
+    # 3. Verify protocol
     print("\n3. Verifying protocol integrity...")
     if not verify_protocol(agent_dir):
-        print("\n⚠ Protocol verification failed!")
+        print("\n[WARN] Protocol verification failed!")
         sys.exit(1)
     
-    print(f"\n✓ Agent protocol initialized successfully!")
+    print(f"\n[OK] Agent protocol initialized successfully!")
     print(f"\nNext steps:")
     print(f"  1. Review and update .agent/project/context.md")
     print(f"  2. Review and update .agent/project/tech-stack.md")
