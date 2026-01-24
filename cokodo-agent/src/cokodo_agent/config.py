@@ -38,6 +38,11 @@ TECH_STACKS = {
 
 # AI Tools
 AI_TOOLS = {
+    "cokodo": {
+        "name": "Cokodo (Protocol Only)",
+        "file": None,  # No additional file, just .agent/
+        "template": None,
+    },
     "cursor": {
         "name": "Cursor",
         "file": ".cursorrules",
@@ -52,5 +57,10 @@ AI_TOOLS = {
         "name": "Claude Projects",
         "file": ".claude/instructions.md",
         "template": "claude-instructions.j2",
+    },
+    "antigravity": {
+        "name": "Google Antigravity",
+        "file": ".agent/rules/",  # Creates rules directory
+        "template": "antigravity",
     },
 }

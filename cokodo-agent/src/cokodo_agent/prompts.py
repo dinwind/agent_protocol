@@ -76,19 +76,24 @@ def prompt_config(
         questionary.Choice(
             title=info["name"],
             value=key,
-            checked=(key in ["cursor", "copilot"]),  # Default checked
+            checked=(key == "cokodo"),  # Only Cokodo is default
         )
         for key, info in AI_TOOLS.items()
     ]
     
     ai_tools = questionary.checkbox(
-        "AI tools to configure:",
+        "AI tools to configure (at least one required):",
         choices=tool_choices,
         style=custom_style,
+        validate=lambda x: len(x) > 0 or "Please select at least one option",
     ).ask()
     
     if ai_tools is None:
         raise KeyboardInterrupt("User cancelled")
+    
+    # Ensure at least one is selected
+    if not ai_tools:
+        ai_tools = ["cokodo"]  # Fallback to cokodo
     
     return {
         "project_name": project_name,

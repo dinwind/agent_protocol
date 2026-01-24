@@ -92,7 +92,7 @@ def init(
             "project_name": name or target_path.name,
             "description": "",
             "tech_stack": stack or "python",
-            "ai_tools": ["cursor", "copilot"],
+            "ai_tools": ["cokodo"],  # Default: protocol only, no extra files
         }
     else:
         # Interactive prompts
