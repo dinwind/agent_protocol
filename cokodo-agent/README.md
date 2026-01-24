@@ -188,7 +188,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Links
+## Documentation
 
+- [Complete Usage Guide](../docs/usage-guide.md) - Detailed usage instructions
+- [使用指南 (中文)](../docs/usage-guide_cn.md) - Chinese documentation
 - [Agent Protocol Documentation](https://github.com/dinwind/agent_protocol)
 - [Report Issues](https://github.com/dinwind/agent_protocol/issues)

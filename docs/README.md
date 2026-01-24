@@ -204,6 +204,7 @@ python .agent/scripts/token-counter.py
 
 ## 📚 相关文档
 
+- [Usage Guide (English)](docs/usage-guide.md)
 - [使用指南 (中文)](docs/usage-guide_cn.md)
 - [Token 对比分析](docs/token-comparison-analysis.md)
 - [协议架构决策记录](.agent/meta/protocol-adr.md)
