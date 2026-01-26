@@ -685,5 +685,201 @@ def version() -> None:
     console.print(f"  Built-in: v{BUNDLED_PROTOCOL_VERSION}")
 
 
+@app.command()
+def help(
+    command: Optional[str] = typer.Argument(
+        None,
+        help="Command to get help for",
+    ),
+) -> None:
+    """Show help information for commands."""
+    commands_info = {
+        "init": {
+            "description": "Create .agent protocol in target directory",
+            "usage": "co init [PATH] [OPTIONS]",
+            "options": [
+                ("-y, --yes", "Skip prompts, use defaults"),
+                ("-n, --name", "Project name"),
+                ("-s, --stack", "Tech stack (python/rust/qt/mixed/other)"),
+                ("-f, --force", "Overwrite existing .agent directory"),
+                ("--offline", "Use built-in protocol (no network)"),
+            ],
+            "examples": [
+                ("co init", "Initialize in current directory with prompts"),
+                ("co init -y", "Initialize with defaults"),
+                ("co init ./myproject -n MyApp -s python", "Initialize with options"),
+                ("co init --offline", "Initialize using built-in protocol"),
+            ],
+        },
+        "lint": {
+            "description": "Check protocol compliance against rules",
+            "usage": "co lint [PATH] [OPTIONS]",
+            "options": [
+                ("-r, --rule", "Check specific rule only"),
+                ("-f, --format", "Output format (text/json/github)"),
+            ],
+            "examples": [
+                ("co lint", "Check current directory"),
+                ("co lint -r integrity-violation", "Check specific rule"),
+                ("co lint -f json", "Output as JSON"),
+                ("co lint -f github", "Output for GitHub Actions"),
+            ],
+        },
+        "diff": {
+            "description": "Compare local .agent with latest protocol",
+            "usage": "co diff [PATH] [OPTIONS]",
+            "options": [
+                ("--offline", "Use built-in protocol (no network)"),
+            ],
+            "examples": [
+                ("co diff", "Show differences with latest"),
+                ("co diff --offline", "Compare with built-in protocol"),
+            ],
+        },
+        "sync": {
+            "description": "Sync local .agent with latest protocol",
+            "usage": "co sync [PATH] [OPTIONS]",
+            "options": [
+                ("--offline", "Use built-in protocol (no network)"),
+                ("--dry-run", "Show what would be updated"),
+                ("-y, --yes", "Skip confirmation prompt"),
+            ],
+            "examples": [
+                ("co sync", "Sync with confirmation"),
+                ("co sync -y", "Sync without confirmation"),
+                ("co sync --dry-run", "Preview changes"),
+            ],
+        },
+        "context": {
+            "description": "Get context files based on stack and task type",
+            "usage": "co context [PATH] [OPTIONS]",
+            "options": [
+                ("-s, --stack", "Tech stack (python/rust/qt/mixed)"),
+                ("-t, --task", "Task type (coding/testing/review/...)"),
+                ("-o, --output", "Output format (list/paths/content)"),
+            ],
+            "examples": [
+                ("co context", "List all context files"),
+                ("co context -s python", "Files for Python stack"),
+                ("co context -t testing", "Files for testing task"),
+                ("co context -o content", "Output file contents"),
+            ],
+        },
+        "journal": {
+            "description": "Record a session entry to session-journal.md",
+            "usage": "co journal [PATH] [OPTIONS]",
+            "options": [
+                ("-t, --title", "Session title"),
+                ("-c, --completed", "Completed items (comma-separated)"),
+                ("-d, --debt", "Technical debt items"),
+                ("--decisions", "Key decisions made"),
+                ("-i, --interactive", "Interactive mode with prompts"),
+            ],
+            "examples": [
+                ("co journal -i", "Interactive mode"),
+                ('co journal -t "Feature X" -c "Task 1, Task 2"', "Quick entry"),
+            ],
+        },
+        "update-checksums": {
+            "description": "Update checksums in manifest.json (maintainer only)",
+            "usage": "co update-checksums [PATH]",
+            "options": [],
+            "examples": [
+                ("co update-checksums", "Update checksums"),
+            ],
+        },
+        "version": {
+            "description": "Show version information",
+            "usage": "co version",
+            "options": [],
+            "examples": [
+                ("co version", "Show version"),
+            ],
+        },
+        "help": {
+            "description": "Show help information for commands",
+            "usage": "co help [COMMAND]",
+            "options": [],
+            "examples": [
+                ("co help", "Show all commands"),
+                ("co help init", "Show help for init command"),
+            ],
+        },
+    }
+
+    if command:
+        # Show help for specific command
+        if command not in commands_info:
+            console.print(f"[red]Error:[/red] Unknown command '{command}'")
+            console.print()
+            console.print("Available commands:")
+            for cmd in commands_info:
+                console.print(f"  {cmd}")
+            raise typer.Exit(1)
+
+        info = commands_info[command]
+        console.print()
+        console.print(Panel.fit(f"[bold blue]co {command}[/bold blue]", border_style="blue"))
+        console.print()
+        console.print(f"[bold]Description:[/bold] {info['description']}")
+        console.print()
+        console.print(f"[bold]Usage:[/bold] {info['usage']}")
+
+        if info["options"]:
+            console.print()
+            console.print("[bold]Options:[/bold]")
+            for opt, desc in info["options"]:
+                console.print(f"  [cyan]{opt:20}[/cyan] {desc}")
+
+        console.print()
+        console.print("[bold]Examples:[/bold]")
+        for example, desc in info["examples"]:
+            console.print(f"  [green]{example}[/green]")
+            console.print(f"    {desc}")
+
+    else:
+        # Show overview of all commands
+        console.print()
+        console.print(
+            Panel.fit(
+                f"[bold blue]Cokodo Agent[/bold blue] v{VERSION}\n"
+                "AI Collaboration Protocol Generator",
+                border_style="blue",
+            )
+        )
+        console.print()
+        console.print("[bold]Commands:[/bold]")
+        console.print()
+
+        # Group commands by category
+        categories = {
+            "Setup": ["init"],
+            "Protocol Management": ["lint", "diff", "sync", "update-checksums"],
+            "Development": ["context", "journal"],
+            "Information": ["version", "help"],
+        }
+
+        for category, cmds in categories.items():
+            console.print(f"  [bold cyan]{category}[/bold cyan]")
+            for cmd in cmds:
+                if cmd in commands_info:
+                    desc = commands_info[cmd]["description"]
+                    console.print(f"    [green]{cmd:18}[/green] {desc}")
+            console.print()
+
+        console.print("[bold]Usage:[/bold]")
+        console.print("  co <command> [options]")
+        console.print()
+        console.print("[bold]Get help for a command:[/bold]")
+        console.print("  co help <command>")
+        console.print()
+        console.print("[bold]Quick start:[/bold]")
+        console.print("  co init          # Create .agent in current directory")
+        console.print("  co lint          # Check protocol compliance")
+        console.print("  co sync          # Update to latest protocol")
+        console.print()
+        console.print("Documentation: https://github.com/dinwind/agent_protocol")
+
+
 if __name__ == "__main__":
     app()

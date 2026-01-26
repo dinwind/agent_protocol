@@ -14,7 +14,7 @@ class AIToolInfo(TypedDict):
 
 
 # Version
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 BUNDLED_PROTOCOL_VERSION = "3.0.0"
 
 # GitHub Release

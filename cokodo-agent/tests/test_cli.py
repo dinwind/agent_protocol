@@ -419,3 +419,48 @@ class TestJournalCommand:
             assert "Task 1" in content
             assert "Refactor needed" in content
             assert "Use pattern X" in content
+
+
+class TestHelpCommand:
+    """Test help command."""
+
+    def test_help_overview(self):
+        """Test help command shows overview."""
+        result = runner.invoke(app, ["help"])
+
+        assert result.exit_code == 0
+        assert "Cokodo Agent" in result.output
+        assert "Commands:" in result.output
+        assert "init" in result.output
+        assert "lint" in result.output
+        assert "sync" in result.output
+
+    def test_help_specific_command(self):
+        """Test help for specific command."""
+        result = runner.invoke(app, ["help", "init"])
+
+        assert result.exit_code == 0
+        assert "co init" in result.output
+        assert "Description:" in result.output
+        assert "Usage:" in result.output
+        assert "Options:" in result.output
+        assert "Examples:" in result.output
+        assert "--yes" in result.output
+        assert "--force" in result.output
+
+    def test_help_unknown_command(self):
+        """Test help for unknown command."""
+        result = runner.invoke(app, ["help", "unknown"])
+
+        assert result.exit_code == 1
+        assert "Unknown command" in result.output
+
+    def test_help_all_commands(self):
+        """Test help shows all command categories."""
+        result = runner.invoke(app, ["help"])
+
+        assert result.exit_code == 0
+        assert "Setup" in result.output
+        assert "Protocol Management" in result.output
+        assert "Development" in result.output
+        assert "Information" in result.output
