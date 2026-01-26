@@ -42,11 +42,11 @@ co init ./new-project
 ```bash
 $ co init
 
-  Cokodo Agent v1.0.0
+  Cokodo Agent v1.2.0
   ====================
 
   Fetching protocol...
-    OK Protocol v2.1.0
+    OK Protocol v3.0.0
 
 ? Project name: my-awesome-app
 ? Brief description: A task management web application
@@ -87,12 +87,18 @@ co init --name "my-app" --stack python -y
 
 ### Commands
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| `co init [path]` | `cokodo init` | Create .agent in target directory |
-| `co version` | `cokodo version` | Show version information |
+| Command | Description |
+|---------|-------------|
+| `co init [path]` | Create .agent in target directory |
+| `co lint [path]` | Check protocol compliance |
+| `co diff [path]` | Compare local .agent with latest protocol |
+| `co sync [path]` | Sync local .agent with latest protocol |
+| `co context [path]` | Get context files based on stack and task |
+| `co journal [path]` | Record a session entry to session-journal.md |
+| `co update-checksums` | Update checksums in manifest.json (maintainer only) |
+| `co version` | Show version information |
 
-### Options
+### Options for `co init`
 
 | Option | Description |
 |--------|-------------|
@@ -101,6 +107,31 @@ co init --name "my-app" --stack python -y
 | `--stack` | Tech stack (python/rust/qt/mixed/other) |
 | `--force` | Overwrite existing .agent directory |
 | `--offline` | Use built-in protocol (no network) |
+
+### Options for `co lint`
+
+| Option | Description |
+|--------|-------------|
+| `--rule, -r` | Check specific rule only |
+| `--format, -f` | Output format (text/json/github) |
+
+### Options for `co context`
+
+| Option | Description |
+|--------|-------------|
+| `--stack, -s` | Tech stack (python/rust/qt/mixed) |
+| `--task, -t` | Task type (coding/testing/review/documentation/bug_fix) |
+| `--output, -o` | Output format (list/paths/content) |
+
+### Options for `co journal`
+
+| Option | Description |
+|--------|-------------|
+| `--title, -t` | Session title (e.g., "Feature X implementation") |
+| `--completed, -c` | Completed items (comma-separated) |
+| `--debt, -d` | Technical debt items (comma-separated) |
+| `--decisions` | Key decisions made (comma-separated) |
+| `--interactive, -i` | Interactive mode with prompts |
 
 ---
 

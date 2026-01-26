@@ -9,7 +9,6 @@ Initialize .agent protocol layer in a new project:
 """
 
 import argparse
-import os
 import re
 import sys
 from datetime import datetime
@@ -36,7 +35,7 @@ def render_template(template: str, variables: dict[str, Any]) -> str:
 def initialize_project_files(agent_dir: Path, config: dict[str, Any]) -> None:
     """Initialize project instance files."""
     project_dir = agent_dir / "project"
-    
+
     # context.md
     context_template = project_dir / "context.md"
     if context_template.exists():
@@ -44,7 +43,7 @@ def initialize_project_files(agent_dir: Path, config: dict[str, Any]) -> None:
         content = render_template(content, config)
         context_template.write_text(content, encoding="utf-8")
         print(f"  [OK] Updated {context_template}")
-    
+
     # tech-stack.md
     tech_template = project_dir / "tech-stack.md"
     if tech_template.exists():
@@ -62,27 +61,27 @@ def generate_adapter(
 ) -> None:
     """Generate AI tool adapter configuration."""
     adapter_dir = agent_dir / "adapters" / adapter_name
-    
+
     if not adapter_dir.exists():
         print(f"  [WARN] Adapter not found: {adapter_name}")
         return
-    
+
     # Find template files
     templates = list(adapter_dir.glob("*.template.md"))
-    
+
     for template_path in templates:
         template_content = load_template(template_path)
         rendered = render_template(template_content, config)
-        
+
         # Output filename (remove .template)
         output_name = template_path.name.replace(".template", "")
-        
+
         # Determine output location based on adapter type
         if adapter_name == "github-copilot":
             output_path = output_dir / ".github" / output_name
         else:
             output_path = output_dir / f".{adapter_name}" / output_name
-        
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(rendered, encoding="utf-8")
         print(f"  [OK] Generated {output_path}")
@@ -100,24 +99,22 @@ def verify_protocol(agent_dir: Path) -> bool:
         "project/tech-stack.md",
         "meta/protocol-adr.md",
     ]
-    
+
     missing = []
     for file in required_files:
         if not (agent_dir / file).exists():
             missing.append(file)
-    
+
     if missing:
         print(f"  [FAIL] Missing files: {', '.join(missing)}")
         return False
-    
+
     print("  [OK] All required files present")
     return True
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Initialize .agent protocol for a new project"
-    )
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Initialize .agent protocol for a new project")
     parser.add_argument(
         "--project-name",
         required=True,
@@ -150,16 +147,16 @@ def main():
         default=".",
         help="Output directory for generated files",
     )
-    
+
     args = parser.parse_args()
-    
+
     agent_dir = Path(args.agent_dir)
     output_dir = Path(args.output_dir)
-    
+
     if not agent_dir.exists():
         print(f"Error: .agent directory not found at {agent_dir}")
         sys.exit(1)
-    
+
     # Configuration variables
     config = {
         "PROJECT_NAME": args.project_name,
@@ -170,30 +167,30 @@ def main():
         "LAST_UPDATE": datetime.now().strftime("%Y-%m-%d"),
         "DATE": datetime.now().strftime("%Y-%m-%d"),
     }
-    
+
     print(f"\n=== Initializing Agent Protocol for '{args.project_name}' ===\n")
-    
+
     # 1. Initialize project files
     print("1. Initializing project files...")
     initialize_project_files(agent_dir, config)
-    
+
     # 2. Generate adapter configurations
     if args.adapter:
         print("\n2. Generating adapter configs...")
         for adapter in args.adapter:
             generate_adapter(agent_dir, adapter, config, output_dir)
-    
+
     # 3. Verify protocol
     print("\n3. Verifying protocol integrity...")
     if not verify_protocol(agent_dir):
         print("\n[WARN] Protocol verification failed!")
         sys.exit(1)
-    
-    print(f"\n[OK] Agent protocol initialized successfully!")
-    print(f"\nNext steps:")
-    print(f"  1. Review and update .agent/project/context.md")
-    print(f"  2. Review and update .agent/project/tech-stack.md")
-    print(f"  3. Read .agent/start-here.md to understand the protocol")
+
+    print("\n[OK] Agent protocol initialized successfully!")
+    print("\nNext steps:")
+    print("  1. Review and update .agent/project/context.md")
+    print("  2. Review and update .agent/project/tech-stack.md")
+    print("  3. Read .agent/start-here.md to understand the protocol")
 
 
 if __name__ == "__main__":

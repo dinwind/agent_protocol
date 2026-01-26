@@ -2,10 +2,20 @@
 
 import os
 from pathlib import Path
+from typing import TypedDict
+
+
+class AIToolInfo(TypedDict):
+    """Type definition for AI tool configuration."""
+
+    name: str
+    file: str | None
+    template: str | None
+
 
 # Version
-VERSION = "1.1.0"
-BUNDLED_PROTOCOL_VERSION = "2.1.0"
+VERSION = "1.2.0"
+BUNDLED_PROTOCOL_VERSION = "3.0.0"
 
 # GitHub Release
 GITHUB_REPO = "dinwind/agent_protocol"
@@ -19,8 +29,11 @@ REMOTE_SERVER_URL = os.environ.get("COKODO_REMOTE_SERVER", "")
 DEFAULT_CACHE_DIR = Path(
     os.environ.get(
         "COKODO_CACHE_DIR",
-        Path.home() / ".cache" / "cokodo" if os.name != "nt" 
-        else Path(os.environ.get("LOCALAPPDATA", Path.home())) / "cokodo" / "cache"
+        (
+            Path.home() / ".cache" / "cokodo"
+            if os.name != "nt"
+            else Path(os.environ.get("LOCALAPPDATA", Path.home())) / "cokodo" / "cache"
+        ),
     )
 )
 
@@ -30,14 +43,14 @@ OFFLINE_MODE = os.environ.get("COKODO_OFFLINE", "").lower() in ("1", "true", "ye
 # Tech stacks
 TECH_STACKS = {
     "python": "Python",
-    "rust": "Rust", 
+    "rust": "Rust",
     "qt": "Qt/C++",
     "mixed": "Mixed (Python + Rust)",
     "other": "Other",
 }
 
 # AI Tools
-AI_TOOLS = {
+AI_TOOLS: dict[str, AIToolInfo] = {
     "cokodo": {
         "name": "Cokodo (Protocol Only)",
         "file": None,  # No additional file, just .agent/

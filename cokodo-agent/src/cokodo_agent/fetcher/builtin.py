@@ -12,28 +12,28 @@ from cokodo_agent.fetcher.base import (
 
 class BuiltinFetcher(BaseFetcher):
     """Fetch protocol from bundled files in the package."""
-    
+
     name = "Built-in"
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         # Get the bundled directory path
         self.bundled_path = Path(__file__).parent.parent / "bundled" / "agent"
-    
+
     def is_available(self) -> bool:
         """Check if bundled protocol exists."""
-        return self.bundled_path.exists() and (self.bundled_path / "start-here.md").exists()
-    
+        manifest_exists = self.bundled_path.exists() and (self.bundled_path / "start-here.md").exists()
+        return bool(manifest_exists)
+
     def fetch(self) -> Tuple[Path, str]:
         """
         Return path to bundled protocol.
-        
+
         Returns:
             Tuple of (protocol_path, version)
         """
         if not self.is_available():
             raise SourceUnavailableError(
-                "Built-in protocol not found. "
-                "The package may be corrupted. Please reinstall."
+                "Built-in protocol not found. " "The package may be corrupted. Please reinstall."
             )
-        
+
         return self.bundled_path, BUNDLED_PROTOCOL_VERSION

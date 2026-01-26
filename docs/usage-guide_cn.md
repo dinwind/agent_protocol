@@ -2,8 +2,8 @@
 
 > 在项目中快速配置 AI 协作协议的完整指南
 
-[![CLI 版本](https://img.shields.io/badge/CLI-v1.0.0-blue.svg)](../cokodo-agent)
-[![协议版本](https://img.shields.io/badge/Protocol-v2.1.0-green.svg)](../.agent/manifest.json)
+[![CLI 版本](https://img.shields.io/badge/CLI-v1.2.0-blue.svg)](../cokodo-agent)
+[![协议版本](https://img.shields.io/badge/Protocol-v3.0.0-green.svg)](../.agent/manifest.json)
 
 ---
 
@@ -64,11 +64,11 @@ CLI 将引导你完成配置：
 
 ```
 ╭─────────────────────────╮
-│  Cokodo Agent v1.0.0    │
+│  Cokodo Agent v1.2.0    │
 ╰─────────────────────────╯
 
 Fetching protocol...
-  OK Protocol v2.1.0
+  OK Protocol v3.0.0
 
 ? Project name: my-awesome-app
 ? Brief description: 一个任务管理应用
@@ -110,17 +110,9 @@ co init ./new-project --yes
 
 ## 命令参考
 
-### `co init [PATH]`（别名：`cokodo init`）
+### `co init [PATH]`
 
 在目标位置创建 `.agent` 协议目录。
-
-**参数：**
-
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `PATH` | 目标目录 | 当前目录 |
-
-**选项：**
 
 | 选项 | 简写 | 说明 |
 |------|------|------|
@@ -149,16 +141,202 @@ co init --force
 co init --offline
 ```
 
-### `co version`（别名：`cokodo version`）
+### `co lint [PATH]`
+
+检查协议合规性，包含 8 项检查规则。
+
+| 选项 | 简写 | 说明 |
+|------|------|------|
+| `--rule` | `-r` | 只检查特定规则 |
+| `--format` | `-f` | 输出格式（`text`/`json`/`github`） |
+
+**检查规则：**
+
+| 规则 | 说明 |
+|------|------|
+| `directory-structure` | 标准目录是否存在 |
+| `required-files` | 必需文件是否存在 |
+| `integrity-violation` | 锁定文件完整性（SHA256 校验） |
+| `start-here-spec` | start-here.md 不含项目特定信息 |
+| `naming-convention` | kebab-case 命名规范 |
+| `skills-placement` | 项目技能在 _project/ 下 |
+| `engine-pollution` | 锁定目录无硬编码路径 |
+| `internal-links` | 内部链接有效性 |
+
+**示例：**
+
+```bash
+# 运行所有检查
+co lint
+
+# 只检查完整性
+co lint --rule integrity-violation
+
+# JSON 格式输出（用于 CI）
+co lint --format json
+
+# GitHub Actions 注解格式
+co lint --format github
+```
+
+### `co diff [PATH]`
+
+对比本地 `.agent` 与最新协议的差异。
+
+| 选项 | 说明 |
+|------|------|
+| `--offline` | 使用内置协议对比 |
+
+**示例：**
+
+```bash
+# 对比最新协议
+co diff
+
+# 离线对比
+co diff --offline
+```
+
+**输出示例：**
+
+```
+Comparing with latest protocol...
+
+Local version:  3.0.0
+Remote version: 3.0.1
+
+       Changes
+┌───────────┬───────┐
+│ Status    │ Count │
+├───────────┼───────┤
+│ Added     │ 2     │
+│ Modified  │ 5     │
+│ Unchanged │ 33    │
+└───────────┴───────┘
+
+Added files:
+  + core/workflows/new-workflow.md
+
+Modified files:
+  ~ core/core-rules.md
+  ~ scripts/lint-protocol.py
+
+Run co sync to update your protocol.
+```
+
+### `co sync [PATH]`
+
+同步本地 `.agent` 到最新协议版本。
+
+| 选项 | 简写 | 说明 |
+|------|------|------|
+| `--offline` | | 使用内置协议同步 |
+| `--dry-run` | | 预览变更，不实际修改 |
+| `--yes` | `-y` | 跳过确认提示 |
+
+**重要：** `project/` 目录下的文件不会被覆盖，保留你的项目配置。
+
+**示例：**
+
+```bash
+# 交互式同步
+co sync
+
+# 预览变更
+co sync --dry-run
+
+# 自动确认同步
+co sync -y
+
+# 离线同步
+co sync --offline -y
+```
+
+### `co context [PATH]`
+
+根据技术栈和任务类型获取相关上下文文件。
+
+| 选项 | 简写 | 说明 |
+|------|------|------|
+| `--stack` | `-s` | 技术栈（`python`/`rust`/`qt`/`mixed`） |
+| `--task` | `-t` | 任务类型（见下表） |
+| `--output` | `-o` | 输出格式（`list`/`paths`/`content`） |
+
+**任务类型：**
+
+| 任务 | 说明 | 加载的文件 |
+|------|------|-----------|
+| `coding` | 编码任务 | bug-prevention.md, design-principles.md |
+| `testing` | 测试任务 | testing.md |
+| `review` | 代码审查 | review-process.md, quality-assurance.md |
+| `documentation` | 文档任务 | documentation.md |
+| `bug_fix` | Bug 修复 | coding workflows + guardian skill |
+| `feature_development` | 功能开发 | coding + testing workflows |
+
+**示例：**
+
+```bash
+# 列出 Python 编码任务的上下文文件
+co context --stack python --task coding
+
+# 输出文件路径（用于脚本）
+co context --task bug_fix --output paths
+
+# 输出文件内容（可管道传递给 AI）
+co context --stack python --output content
+
+# 复制到剪贴板（macOS）
+co context --task coding --output content | pbcopy
+
+# 复制到剪贴板（Windows）
+co context --task coding --output content | clip
+```
+
+### `co journal [PATH]`
+
+记录会话日志到 session-journal.md。
+
+| 选项 | 简写 | 说明 |
+|------|------|------|
+| `--title` | `-t` | 会话标题（如 "功能 X 实现"） |
+| `--completed` | `-c` | 完成的工作项（逗号分隔） |
+| `--debt` | `-d` | 技术债务（逗号分隔） |
+| `--decisions` | | 关键决策（逗号分隔） |
+| `--interactive` | `-i` | 交互模式 |
+
+**示例：**
+
+```bash
+# 交互模式（推荐）
+co journal -i
+
+# 命令行模式
+co journal --title "用户认证功能" \
+  --completed "实现登录API,添加JWT验证,编写单元测试" \
+  --decisions "采用JWT而非Session"
+
+# 快速记录
+co journal -t "Bug修复" -c "修复登录超时问题,更新错误处理"
+```
+
+### `co update-checksums [PATH]`
+
+更新 `manifest.json` 中的文件签名（仅协议维护者使用）。
+
+```bash
+co update-checksums
+```
+
+### `co version`
 
 显示 CLI 和内置协议的版本信息。
 
 ```bash
 $ co version
-cokodo-agent v1.0.0
+cokodo-agent v1.2.0
 
 Protocol versions:
-  Built-in: v2.1.0
+  Built-in: v3.0.0
 ```
 
 ---
@@ -175,54 +353,32 @@ your-project/
 │   ├── index.md                   # 🗂️ 文档导航索引
 │   ├── manifest.json              # ⚙️ 加载策略与元数据
 │   │
-│   ├── core/                      # 🔧 治理引擎（可跨项目复用）
+│   ├── core/                      # 🔒 治理引擎（锁定，跨项目复用）
 │   │   ├── core-rules.md          #    核心哲学与铁律
 │   │   ├── instructions.md        #    AI 协作指南
 │   │   ├── conventions.md         #    命名与 Git 约定
 │   │   ├── security.md            #    安全开发规范
 │   │   ├── examples.md            #    代码示例
 │   │   ├── workflows/             #    工作流规范集
-│   │   │   ├── ai-boundaries.md
-│   │   │   ├── bug-prevention.md
-│   │   │   ├── design-principles.md
-│   │   │   ├── documentation.md
-│   │   │   ├── pre-task-checklist.md
-│   │   │   ├── quality-assurance.md
-│   │   │   ├── review-process.md
-│   │   │   └── testing.md
 │   │   └── stack-specs/           #    技术栈规约
-│   │       ├── git.md
-│   │       ├── python.md
-│   │       ├── rust.md
-│   │       └── qt.md
 │   │
-│   ├── project/                   # 📋 项目实例（定制化）
-│   │   ├── context.md             #    ✏️ 业务上下文
-│   │   ├── tech-stack.md          #    ✏️ 技术栈配置
+│   ├── project/                   # ✏️ 项目实例（可编辑）
+│   │   ├── context.md             #    业务上下文
+│   │   ├── tech-stack.md          #    技术栈配置
 │   │   ├── known-issues.md        #    已知问题库
-│   │   └── adr/                   #    架构决策记录
-│   │       └── readme.md
+│   │   ├── commands.md            #    常用命令
+│   │   └── session-journal.md     #    会话日志
 │   │
 │   ├── skills/                    # 🛠️ 技能模块
-│   │   ├── skill-interface.md     #    技能开发指南
-│   │   ├── guardian/              #    代码质量门禁
-│   │   ├── ai-integration/        #    AI 服务集成
-│   │   └── agent-governance/      #    协议健康检查
+│   │   ├── skill-interface.md     #    🔒 技能开发指南
+│   │   ├── guardian/              #    🔒 代码质量门禁
+│   │   ├── ai-integration/        #    🔒 AI 服务集成
+│   │   ├── agent-governance/      #    🔒 协议健康检查
+│   │   └── _project/              #    ✏️ 项目自定义技能
 │   │
-│   ├── adapters/                  # 🔌 工具适配器（模板）
-│   │   ├── cursor/
-│   │   ├── github-copilot/
-│   │   ├── claude/
-│   │   └── google-antigravity/
-│   │
-│   ├── meta/                      # 📚 协议演进
-│   │   ├── protocol-adr.md
-│   │   └── adr-archive.md
-│   │
-│   └── scripts/                   # 🔧 辅助脚本
-│       ├── init_agent.py
-│       ├── lint-protocol.py
-│       └── token-counter.py
+│   ├── adapters/                  # 🔒 工具适配器（模板）
+│   ├── meta/                      # 🔒 协议演进
+│   └── scripts/                   # 🔒 辅助脚本
 │
 ├── .cursorrules                   # [可选] Cursor 配置
 ├── .github/
@@ -231,14 +387,12 @@ your-project/
     └── instructions.md            # [可选] Claude 配置
 ```
 
-### 目录类型
+### 目录权限
 
-| 类型 | 目录 | 用途 | 可移植性 |
-|------|------|------|----------|
-| **引擎文件** | `core/` | 通用治理规则 | ✅ 跨项目复用 |
-| **实例文件** | `project/` | 项目特定信息 | ❌ 项目专属 |
-
-**核心规则：** 引擎文件严禁包含项目特定的名称、路径或业务逻辑。
+| 标记 | 目录 | 权限 | 说明 |
+|------|------|------|------|
+| 🔒 | `core/`, `adapters/`, `meta/`, `scripts/` | 只读 | 协议引擎，由 `co sync` 更新 |
+| ✏️ | `project/`, `skills/_project/` | 可编辑 | 项目特定配置 |
 
 ---
 
@@ -331,16 +485,6 @@ pip install -r requirements.txt
 pytest tests/
 ```
 
-### 第三步：配置 AI 工具（可选）
-
-如需自定义生成的 AI 工具配置：
-
-| AI 工具 | 操作 |
-|---------|------|
-| **Cursor** | 编辑 `.cursorrules` 或从 `.agent/adapters/cursor/rules.template.md` 复制 |
-| **GitHub Copilot** | 编辑 `.github/copilot-instructions.md` |
-| **Claude** | 运行 `python .agent/adapters/claude/adapt_for_claude.py` |
-
 ---
 
 ## AI 会话模板
@@ -353,24 +497,27 @@ pytest tests/
 今天的任务是：[描述你的任务]
 ```
 
-### 完整上下文（首次或复杂任务）
+### 使用动态上下文（推荐）
 
+```bash
+# 获取编码任务的上下文
+co context --stack python --task coding --output content
 ```
-请按以下顺序阅读文件建立项目上下文：
 
-1. .agent/start-here.md
-2. .agent/project/context.md
-3. .agent/project/tech-stack.md
-4. .agent/core/instructions.md
-5. .agent/core/stack-specs/python.md  # 根据技术栈选择
+然后将输出粘贴给 AI，或使用管道：
 
-然后开始今天的任务：[描述你的任务]
+```bash
+# macOS/Linux
+co context --task bug_fix --output content | pbcopy
+
+# Windows
+co context --task bug_fix --output content | clip
 ```
 
 ### 调试会话
 
 ```
-请阅读 .agent/start-here.md 和 .agent/core/workflows/bug-prevention.md 
+请阅读 .agent/start-here.md 和 .agent/core/workflows/bug-prevention.md
 了解已知问题。
 
 我遇到了这个 Bug：[描述问题]
@@ -383,7 +530,19 @@ pytest tests/
 ### 检查协议健康度
 
 ```bash
-python .agent/scripts/lint-protocol.py
+co lint
+```
+
+### 查看协议更新
+
+```bash
+co diff
+```
+
+### 同步协议更新
+
+```bash
+co sync
 ```
 
 ### 统计 Token 消耗
@@ -394,7 +553,7 @@ python .agent/scripts/token-counter.py
 
 ### 记录 Bug 预防知识
 
-编辑 `.agent/core/workflows/bug-prevention.md` 添加新条目：
+编辑 `.agent/project/known-issues.md` 添加新条目：
 
 ```markdown
 ### 问题：[简要描述]
@@ -403,26 +562,6 @@ python .agent/scripts/token-counter.py
 **原因：** 为什么发生
 **解决方案：** 如何修复/预防
 **日期：** YYYY-MM-DD
-```
-
-### 记录架构决策
-
-在 `.agent/project/adr/` 下创建新的 ADR 文件：
-
-```markdown
-# ADR-001: [决策标题]
-
-## 状态
-已采纳
-
-## 背景
-[为什么需要这个决策]
-
-## 决策
-[做出了什么决定]
-
-## 影响
-[决策的影响]
 ```
 
 ---
@@ -456,15 +595,12 @@ python .agent/scripts/token-counter.py
 
 ### Q: 协议文件太多，Token 消耗太大？
 
-**解决方案：** 使用 `manifest.json` 定义的分层加载策略，只加载当前任务需要的文件。
+**解决方案：** 使用 `co context` 命令按需加载：
 
-必要文件（约 3,000 tokens）：
-- `start-here.md`
-- `quick-reference.md`
-
-上下文文件（约 2,000 tokens）：
-- `project/context.md`
-- `project/tech-stack.md`
+```bash
+# 只加载编码任务需要的文件
+co context --task coding --output content
+```
 
 ### Q: 协议初始化失败？
 
@@ -476,30 +612,34 @@ python .agent/scripts/token-counter.py
 
 ```bash
 # 强制覆盖 + 离线模式
-cokodo init --force --offline
+co init --force --offline
 ```
 
-### Q: 如何更改协议目录名？
+### Q: 如何检查协议完整性？
 
-**解决方案：** 协议内部使用 `$AGENT_DIR` 占位符。重命名步骤：
+**解决方案：** 使用 lint 命令检查：
 
-1. 重命名目录：
-   ```bash
-   mv .agent .agent_custom
-   ```
+```bash
+co lint --rule integrity-violation
+```
 
-2. 更新 `manifest.json`：
-   ```json
-   {
-     "directory_name": ".agent_custom"
-   }
-   ```
+如果发现文件被修改，可以使用 `co sync` 恢复。
 
 ---
 
 ## 协议升级
 
-### 升级步骤
+### 使用 co sync（推荐）
+
+```bash
+# 查看有哪些更新
+co diff
+
+# 同步更新（project/ 目录会保留）
+co sync
+```
+
+### 手动升级
 
 1. **备份当前项目文件：**
    ```bash
@@ -513,7 +653,7 @@ cokodo init --force --offline
 
 3. **初始化新版本：**
    ```bash
-   cokodo init --force
+   co init --force
    ```
 
 4. **恢复项目文件：**
@@ -521,14 +661,12 @@ cokodo init --force --offline
    cp -r ./project-backup/* .agent/project/
    ```
 
-5. **查看变更：**
-   检查 `.agent/meta/protocol-adr.md` 了解版本变更。
-
 ### 版本兼容性
 
 | CLI 版本 | 协议版本 | 备注 |
 |----------|----------|------|
-| 1.0.x | 2.1.0 | 当前稳定版 |
+| 1.2.x | 3.0.0 | 当前稳定版 |
+| 1.1.x | 2.1.0 | 旧版本 |
 
 ---
 
@@ -557,20 +695,6 @@ cokodo init --force --offline
 
 ---
 
-## 协议来源
-
-CLI 从多个来源获取协议，自动降级：
-
-```
-优先级 1: GitHub Release（最新版本）
-    ↓ [不可用]
-优先级 2: 远程服务器（保留，未来使用）
-    ↓ [不可用]
-优先级 3: 内置版本（离线备用）
-```
-
----
-
 ## 支持
 
 - **文档：** [Agent Protocol 仓库](https://github.com/dinwind/agent_protocol)
@@ -583,6 +707,6 @@ CLI 从多个来源获取协议，自动降级：
 
 **让 AI 协作更规范、更高效、更可持续**
 
-*文档版本: 1.0.0 | 协议版本: 2.1.0 | 最后更新: 2026-01-24*
+*文档版本: 1.2.0 | 协议版本: 3.0.0 | 最后更新: 2026-01-26*
 
 </div>

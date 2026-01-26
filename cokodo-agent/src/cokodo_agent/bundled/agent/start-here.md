@@ -2,11 +2,11 @@
 
 > **First message for new AI sessions**: Please read this file to establish project context, then strictly follow protocol rules.
 
-> **Directory naming convention**: This protocol directory can be named `.agent`, `.agent_cn`, etc. Documentation uses `$AGENT_DIR` as placeholder for the protocol root directory. See `directory_name` in `manifest.json` for actual name.
+> **IMPORTANT**: Before modifying any `.agent` files, read [meta/agent-protocol-rules.md](meta/agent-protocol-rules.md) for operation constraints.
 
 ---
 
-## 📍 Protocol Architecture Overview
+## Protocol Architecture Overview
 
 This protocol uses an **Engine-Instance Separation** architecture, decoupling generic governance rules from project-specific information:
 
@@ -15,51 +15,53 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 - **`skills/`**: Modular capabilities (on-demand tools and specifications).
 - **`adapters/`**: AI tool adapters (Cursor, Claude, Copilot, etc.).
 
-See [index.md](index.md) or [quick-reference.md](quick-reference.md) for detailed directory structure.
-
 ---
 
-## 📚 Context Building Path (Required Reading)
+## Context Building Path (Required Reading)
 
-⚠️ **Mandatory**: AI must load documents in the following order during first session to establish baseline understanding.
+**Mandatory**: AI must load documents in the following order during first session to establish baseline understanding.
 
-### 1. Core Protocol (Required for every session)
+### 1. Project Context (Required for every session)
 
-- [quick-reference.md](quick-reference.md): **One-page cheat sheet** (coding, Git, common commands).
+- [project/context.md](project/context.md): **Project overview** (scope, features, status).
+- [project/tech-stack.md](project/tech-stack.md): **Tech stack** and environment setup.
+
+### 2. Core Protocol (Required for every session)
+
 - [core/core-rules.md](core/core-rules.md): **Core principles** (isolation, security, delivery quality).
-- [project/context.md](project/context.md): **Project context** (business logic, feature status).
+- [core/conventions.md](core/conventions.md): **Naming and Git conventions**.
+- [core/workflows/bug-prevention.md](core/workflows/bug-prevention.md): **Bug prevention** handbook.
 
-### 2. Technical Specifications (Read before starting tasks)
+### 3. Tech Stack Specific (Select based on project/tech-stack.md)
 
-- [core/instructions.md](core/instructions.md): AI collaboration guidelines and behavior boundaries.
-- [project/tech-stack.md](project/tech-stack.md): Tech stack, dependencies, and environment config.
-- [core/stack-specs/](core/stack-specs/): Select language-specific development standards (Python/Rust/Qt/Git).
+| Tech Stack | File |
+|------------|------|
+| Python | [core/stack-specs/python.md](core/stack-specs/python.md) |
+| Rust | [core/stack-specs/rust.md](core/stack-specs/rust.md) |
+| Qt/C++ | [core/stack-specs/qt.md](core/stack-specs/qt.md) |
 
-### 3. On-Demand Loading (For specific scenarios)
+### 4. On-Demand Loading
 
-- [project/known-issues.md](project/known-issues.md): Consult when debugging or encountering new bugs.
-- [core/workflows/](core/workflows/): Standard processes for coding, testing, documentation, or review.
-- [skills/](skills/): Consult when needing automated checks or specific feature integration.
-
----
-
-## 🛠️ Quick Start Commands
-
-```powershell
-# Set protocol directory variable (modify according to actual directory name)
-$AGENT_DIR = ".agent"
-
-# 1. Check protocol compliance
-python $AGENT_DIR/scripts/lint-protocol.py
-
-# 2. Count Token usage
-python $AGENT_DIR/scripts/token-counter.py
-
-# 3. Run code quality checks
-python $AGENT_DIR/skills/guardian/scripts/check_all.py
-```
+| Scenario | File |
+|----------|------|
+| **Protocol operation rules** | [meta/agent-protocol-rules.md](meta/agent-protocol-rules.md) |
+| Session history | [project/session-journal.md](project/session-journal.md) |
+| Known issues | [project/known-issues.md](project/known-issues.md) |
+| Architecture decisions | [project/adr/](project/adr/) |
 
 ---
 
-*Last updated: 2026-01-23*
-*Protocol version: 2.1.0*
+## Design Principles
+
+### Engine-Instance Separation
+- **Engine files** (`core/`): Generic rules, project names strictly forbidden
+- **Instance files** (`project/`): The only entry point for project-specific information
+
+### Asset-Oriented Design
+- `.agent` directory is a digital asset as important as source code
+- Supports seamless cross-project migration
+- Deletion does not affect main project operation
+
+---
+
+*Protocol version: 3.0.0*

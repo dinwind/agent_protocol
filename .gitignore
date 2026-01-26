@@ -33,3 +33,6 @@ Thumbs.db
 
 # Local docs (not tracked)
 local_docs/
+
+# Chinese protocol (deprecated, no longer maintained)
+.agent_cn/
