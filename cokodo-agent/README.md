@@ -42,7 +42,7 @@ co init ./new-project
 ```bash
 $ co init
 
-  Cokodo Agent v1.2.0
+  Cokodo Agent v1.3.0
   ====================
 
   Fetching protocol...
