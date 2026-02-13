@@ -22,7 +22,7 @@ class IDESpecVersion(TypedDict):
 
 
 # Version
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 BUNDLED_PROTOCOL_VERSION = "3.1.1"
 
 # GitHub Release
