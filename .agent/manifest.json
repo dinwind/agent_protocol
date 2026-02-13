@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "agent-protocol",
-  "version": "3.0.0",
+  "version": "3.1.1",
   "description": "AI Agent Collaboration Protocol - Standardized Digital Asset",
   "directory_name": ".agent",
   "directory_name_comment": "Protocol directory name, documents use $AGENT_DIR placeholder",
@@ -13,7 +13,6 @@
         "token_budget": 3000,
         "files": [
           "start-here.md",
-          "quick-reference.md",
           "core/core-rules.md"
         ]
       },
@@ -25,7 +24,8 @@
           "core/instructions.md",
           "project/context.md",
           "project/tech-stack.md",
-          "project/known-issues.md"
+          "project/known-issues.md",
+          "project/deploy.md"
         ]
       },
       "stack_specs": {
@@ -55,7 +55,8 @@
         "mappings": {
           "coding": [
             "core/workflows/bug-prevention.md",
-            "core/workflows/design-principles.md"
+            "core/workflows/design-principles.md",
+            "core/workflows/adr-guide.md"
           ],
           "testing": [
             "core/workflows/testing.md"
@@ -69,7 +70,8 @@
           ],
           "planning": [
             "core/workflows/pre-task-checklist.md",
-            "core/workflows/ai-boundaries.md"
+            "core/workflows/ai-boundaries.md",
+            "core/workflows/token-budget.md"
           ]
         }
       },
@@ -109,7 +111,8 @@
           "core/stack-specs/git.md",
           "core/security.md",
           "core/examples.md",
-          "meta/protocol-adr.md"
+          "meta/protocol-adr.md",
+          "project/conventions.md"
         ]
       }
     },
@@ -191,6 +194,7 @@
     "core/conventions.md",
     "project/context.md",
     "project/tech-stack.md",
+    "project/deploy.md",
     "meta/protocol-adr.md"
   ],
   "naming_conventions": {
@@ -209,11 +213,23 @@
         "version": "2.0.0",
         "description": "Protocol unified merge, directory structure changed"
       }
+    ],
+    "minor_changes": [
+      {
+        "version": "3.1.0",
+        "description": "Added deploy.md, conventions.md templates; ADR guide workflow; skill parameterization; token budget guide"
+      }
+    ],
+    "patch_changes": [
+      {
+        "version": "3.1.1",
+        "description": "Scope clarity (UTF-8/emoji apply to entire project); no-emoji in core; protocol self-check prompt in meta/; ADR 005 (UTF-8 consolidation), ADR 006 (scope and emoji audit)"
+      }
     ]
   },
   "metadata": {
     "created": "2026-01-23",
-    "updated": "2026-01-26",
+    "updated": "2026-02-13",
     "maintainer": "AI Agent Protocol Team"
   },
   "checksums": {
@@ -226,28 +242,31 @@
     "adapters/github-copilot/instructions.template.md": "dae6f4383fa2db76b907d6b82bf494c238310228ab7392ae85a2084b661dca6b",
     "adapters/google-antigravity/adapt_for_antigravity.py": "07d5c3366cfb47842d36de76eb5dc782d162d1edb08e53134c32df3022bc158e",
     "adapters/google-antigravity/instructions.template.md": "06f42a36fc26de6e25c255e54da3e74757c7b0e7c7e1f42f8377509c07e2ebc7",
-    "core/conventions.md": "6541955f0be61f9338b6b0f53367ac0b2033bafbd3ce7755da6287b5b6da0f15",
-    "core/core-rules.md": "e7d85c2303c3e44219c3a25401be8c7a4aa1004f0386a4e2e8be0b65569d531c",
-    "core/examples.md": "e4720dd6dd36540ed6bccb37e67f8985ec98eaeda81e22178deac167534466f0",
-    "core/instructions.md": "4863f640d74c23c03faf7f1f823efb2778f277bfa774ad0eb57724181ccfcfa2",
-    "core/security.md": "17729022c8c4b557074560372738687fd262747a078f672660cdc4a3dc400f72",
-    "core/stack-specs/git.md": "824cf35a448a7e8734696af8458929a73e5eba8e32824829d0bcb1c18743e5c0",
-    "core/stack-specs/python.md": "d05ea9cd285ac6f3fcf632dad96faa93a82e5cd5cd4b364f64c7611ecfc9d049",
-    "core/stack-specs/qt.md": "063b74fd1c2404a25e0cdc5f462badc74e82fa535112346f10e9ef6d19743ece",
-    "core/stack-specs/rust.md": "2c031e6c4f775d7f40944033d6999e2638d5e20116ec2b73df3e4936409c64cc",
-    "core/workflows/ai-boundaries.md": "709892bb02016abce5ed7547daa8374c6eace8407f44c39b45182a70e2a25b2b",
-    "core/workflows/bug-prevention.md": "2010cc04fab84b6482c04ef2a9fb0eda49a5fb0377f3687506d23f5d92937187",
-    "core/workflows/design-principles.md": "6916eaab80e244a9b2b9998de016fb232d5da94ef0906de667770a9ee6035a96",
+    "core/conventions.md": "c8c11609af1579c20801a92860548a3f04163c0b55cfec03f640e77b8a8ac803",
+    "core/core-rules.md": "e2b5037ec44a34719b9754a0c4d4f9a714b0c0d3d524439b61d4cc5e53c115c6",
+    "core/examples.md": "cc91e50736d2dd9b495ab31fdbcd7c80e18cd37b5c27022aaa966f8997ad73a3",
+    "core/instructions.md": "e60db458c19895238b0a7ac85b4bbad6f8a9f361adc2c9a6fa5a48279d21bebe",
+    "core/security.md": "d3be638d57f83437dd5067449b1b1ea2bd8d35541ead105bb76425417c26a8b4",
+    "core/stack-specs/git.md": "51ad1bcbb32be4c2bb8b849be9f8382db59429dbaae705f165468ed9545a06ad",
+    "core/stack-specs/python.md": "924e99e98a59e25174641d3193a338662924f32b6a8259d6d96f1f6ee28f2bd6",
+    "core/stack-specs/qt.md": "4e064c96bf267a9607fe101f3e385c02a1d635b9ecac045c8bc4745e1516ed78",
+    "core/stack-specs/rust.md": "3b4ae99c8c7e02f3a30877f368409fcc38d871d1787343553c24a307062ea2b8",
+    "core/workflows/adr-guide.md": "9055513e22efc0ad78b4160a12b52ad2156ba371da0f38fcb6b6dbc5f670f806",
+    "core/workflows/ai-boundaries.md": "77eef95b252bb0c0502f027a91944cac4cdc7dbde8aa47a9468d00363adb081b",
+    "core/workflows/bug-prevention.md": "7fc247c45a08e1e61eb2fbe0c79992e0adba921e37dd7f10a6bd5d9db904d48b",
+    "core/workflows/design-principles.md": "6443e04c745ac3950403e2ecd2fbbb9c911046d815274dc720d745150611d752",
     "core/workflows/documentation.md": "e85339f0a03477c0c76eaf2354686da1961c25dad3e3232e4d398b422196512a",
     "core/workflows/pre-task-checklist.md": "f6268e0a2cdec92bbfbcdeff9ea48f1a155ab5d7f649dd581d523aa010be9348",
     "core/workflows/quality-assurance.md": "b8d127c4708059475b5706603fdb3e665272ca8d6968105199ccd46b14046aed",
     "core/workflows/review-process.md": "26142e6df297487cef16a55331a371ae3b2467fb54194de3cabff7896bda7447",
     "core/workflows/testing.md": "a885bbfe105fce7f8d2fff0558dfb44a19a9766b8cfe148fee71be25606c5631",
+    "core/workflows/token-budget.md": "ee2e2a1fd9dd2e4c50de1513d732da40e289f8115ccd11d381ba1f64c7d60a09",
     "meta/adr-archive.md": "c8c6a70c1e20e70735a74ad6ce10037b000af462fcdf3d814ad01b484b4fc243",
-    "meta/agent-protocol-rules.md": "a9636538cd5c10a8024f0de5ba0c6e3ebe2cf3b4bc9a18bb0f9f373a075627ba",
+    "meta/agent-protocol-rules.md": "b53fe70f5d65782fcff1e2fde3cae6253a95be3f8cf23e999b6391bb49e8b7d1",
     "meta/protocol-adr.md": "0858568424c3e4d70ae98b6223a2dc57a5f83cede96a2a6816492b9fc5fd71c1",
+    "meta/self-check-prompt.md": "62f32da9f336c1bf885fbbea0df71871a0d11e572d4045ab7d1726fe3851fe0c",
     "scripts/init_agent.py": "2d8c524a0bc882c0e24b378a3dc974964a1c2fb9eff45b5a053fc5428f151243",
-    "scripts/lint-protocol.py": "6385e6cb7e44ac57cd25d6d5221fbeb49eaadf657648544f17cefdbfc7af94ee",
+    "scripts/lint-protocol.py": "129b2a28bddc24b1be6ea29d6aad479df1b46b0a03ae4cb66fce2945674f16be",
     "scripts/requirements.txt": "ada6fecc97d33902264d3589826fd045d445567e3bb3710198a27b0318fafe64",
     "scripts/token-counter.py": "d32d4ebaf072c0835b4ce249c529b218849eda0504baa362db4bd157da93d284",
     "skills/agent-governance/SKILL.md": "bb560783ff7885036fd8519b2e5bd3b73f8dcf84a4e5d3bd05fccb185473819f",
@@ -255,7 +274,7 @@
     "skills/ai-integration/llm-client.md": "ec6552d5171a261b469377775c026608e1702b3521559936d31502446811ad98",
     "skills/ai-integration/prompt-engineering.md": "35fcdc945e87f8a86e6bded5e0627a6567d6a8cc665a810f7acb54ff47b4931d",
     "skills/guardian/SKILL.md": "cea0c54a98e93e3b8b01f6527a174f2531fd04dc6d8e6094241c406c092f0d8a",
-    "skills/skill-interface.md": "cdc21eb4697cfd58941c8927e1bff0a54027b3246878d23e0581c820305f508f",
-    "start-here.md": "e0cbb0e92314fb352d180eaae55bfccbc5d0b701dcadad6f6cdd12fa92372adb"
+    "skills/skill-interface.md": "8d8f62317c4f8fa6bfe2fc8b237ea2d6b4aa4f9600c876523041f2d21c849468",
+    "start-here.md": "43fbbea147247c52f1715a44111ee405a351c917199c9b6d9854792fd4c991db"
   }
 }

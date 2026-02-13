@@ -2,6 +2,8 @@
 
 > For Rust projects using Cargo.
 
+- **Scope**: All Rust files in the project (see [core-rules §3.3](../core-rules.md)).
+
 ---
 
 ## 1. Project Structure
@@ -58,11 +60,11 @@ pub fn get_user(id: u64) -> Result<User, AppError> {
 ## 4. Option Handling
 
 ```rust
-// ✅ Use combinators
+// Good: Use combinators
 let name = user.name.unwrap_or_default();
 let upper = user.name.map(|n| n.to_uppercase());
 
-// ✅ Early return with ?
+// Good: Early return with ?
 fn process(data: Option<Data>) -> Option<Result> {
     let data = data?;
     Some(transform(data))

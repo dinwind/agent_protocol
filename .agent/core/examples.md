@@ -10,7 +10,7 @@ In all file read/write operations, must explicitly specify UTF-8 encoding.
 
 ### Python
 ```python
-# ✅ Correct
+# Correct
 with open('file.txt', 'r', encoding='utf-8') as f:
     content = f.read()
 

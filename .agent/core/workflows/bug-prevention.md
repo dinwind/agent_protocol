@@ -2,6 +2,8 @@
 
 > Record common pitfalls and prevention measures. Keep updated when new issues found.
 
+- **Scope**: Applies to the **entire project** (all source, tests, configs).
+
 ---
 
 ## Encoding Issues
@@ -10,14 +12,14 @@
 
 **Symptoms**: Garbled characters, `UnicodeDecodeError`
 **Root cause**: Not specifying encoding when opening files
-**Prevention**: Always explicitly specify `encoding='utf-8'`
+**Prevention**: Always explicitly specify `encoding='utf-8'`. See [core-rules](../core-rules.md) and [examples](../examples.md).
 
 ```python
-# ❌ Wrong
+# Wrong
 with open('file.txt', 'r') as f:
     content = f.read()
 
-# ✅ Correct
+# Correct
 with open('file.txt', 'r', encoding='utf-8') as f:
     content = f.read()
 ```
@@ -33,10 +35,10 @@ with open('file.txt', 'r', encoding='utf-8') as f:
 **Prevention**: Use `autotest_` prefix + dynamic RunID
 
 ```python
-# ❌ Wrong
+# Wrong
 test_user = "test_user"
 
-# ✅ Correct
+# Correct
 import uuid
 run_id = uuid.uuid4().hex[:8]
 test_user = f"autotest_user_{run_id}"
@@ -53,13 +55,13 @@ test_user = f"autotest_user_{run_id}"
 **Prevention**: Catch specific exceptions, always log
 
 ```python
-# ❌ Wrong
+# Wrong
 try:
     do_something()
 except:
     pass
 
-# ✅ Correct
+# Correct
 try:
     do_something()
 except SpecificError as e:
@@ -78,10 +80,10 @@ except SpecificError as e:
 **Prevention**: Use `pathlib` or forward slashes
 
 ```python
-# ❌ Wrong
+# Wrong
 path = "src\\main\\file.py"
 
-# ✅ Correct
+# Correct
 from pathlib import Path
 path = Path("src") / "main" / "file.py"
 ```
@@ -97,11 +99,11 @@ path = Path("src") / "main" / "file.py"
 **Prevention**: Use async versions or run_in_executor
 
 ```python
-# ❌ Wrong
+# Wrong
 async def fetch():
     time.sleep(1)  # Blocks!
 
-# ✅ Correct
+# Correct
 async def fetch():
     await asyncio.sleep(1)
 ```
@@ -117,12 +119,12 @@ async def fetch():
 **Prevention**: Use context managers
 
 ```python
-# ❌ Wrong
+# Wrong
 f = open('file.txt')
 content = f.read()
 # Forgot to close!
 
-# ✅ Correct
+# Correct
 with open('file.txt', encoding='utf-8') as f:
     content = f.read()
 ```

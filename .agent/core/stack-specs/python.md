@@ -2,6 +2,8 @@
 
 > For Python 3.10+ projects.
 
+- **Scope**: All Python files in the project (see [core-rules §3.3](../core-rules.md)).
+
 ---
 
 ## 1. Project Structure
@@ -39,7 +41,7 @@ project/
 ## 3. Type Annotations
 
 ```python
-# ✅ Required
+# Required
 def get_user(user_id: int) -> User | None:
     ...
 
@@ -52,11 +54,11 @@ def process_items(items: list[Item]) -> dict[str, int]:
 ## 4. File Operations
 
 ```python
-# ✅ Always specify encoding
+# Always specify encoding
 with open('file.txt', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# ✅ Use pathlib
+# Use pathlib
 from pathlib import Path
 config_path = Path(__file__).parent / 'config' / 'settings.yaml'
 ```
@@ -66,7 +68,7 @@ config_path = Path(__file__).parent / 'config' / 'settings.yaml'
 ## 5. Exception Handling
 
 ```python
-# ✅ Catch specific exceptions
+# Catch specific exceptions
 try:
     result = api.fetch_data()
 except ConnectionError as e:
@@ -75,7 +77,7 @@ except ConnectionError as e:
 except TimeoutError:
     return None
 
-# ❌ Never bare except
+# Never bare except
 try:
     ...
 except:
@@ -94,11 +96,11 @@ async def fetch_data(url: str) -> dict:
         async with session.get(url) as response:
             return await response.json()
 
-# ❌ Don't block async context
+# Don't block async context
 async def bad():
     time.sleep(1)  # Blocks!
 
-# ✅ Use async versions
+# Use async versions
 async def good():
     await asyncio.sleep(1)
 ```

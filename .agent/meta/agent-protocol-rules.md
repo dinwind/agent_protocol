@@ -28,6 +28,8 @@
     ├── tech-stack.md       # 技术栈、依赖
     ├── known-issues.md     # 已知问题
     ├── commands.md         # 项目特定命令
+    ├── deploy.md           # 部署信息、环境、验证清单
+    ├── conventions.md      # 项目级约定补充
     ├── session-journal.md  # 会话日志
     └── adr/                # 架构决策记录
 ```
@@ -92,6 +94,8 @@
 ✅ 修改 project/tech-stack.md - 更新技术栈信息
 ✅ 修改 project/known-issues.md - 添加/更新已知问题
 ✅ 修改 project/commands.md - 添加/更新项目命令
+✅ 修改 project/deploy.md - 添加/更新部署信息
+✅ 修改 project/conventions.md - 添加/更新项目约定
 ✅ 修改 project/session-journal.md - 追加会话记录
 ✅ 新增 project/adr/*.md - 添加架构决策记录
 ✅ 新增 project/ 下的其他文件 - 项目特定文档
@@ -135,12 +139,14 @@
 | `tech-stack.md` | 技术栈、依赖、环境配置 | ✅ |
 | `known-issues.md` | 已知问题、技术债务 | ✅ |
 | `commands.md` | 项目特定命令 | ✅ |
+| `deploy.md` | 部署环境、命令、验证清单 | ✅ |
 | `session-journal.md` | AI 会话日志 | ✅ |
 
 ### 6.2 可选文件
 
 | 文件 | 用途 |
 |------|------|
+| `conventions.md` | 项目级约定（补充 core 通用规则） |
 | `adr/*.md` | 架构决策记录 |
 | `structure.md` | 详细目录结构说明 |
 | 其他 | 项目特定文档 |
@@ -185,18 +191,24 @@
 ### 7.3 同步命令 (cokodo-agent)
 
 ```bash
-# 同步通用层
-co sync my-project/ --from agent_protocol
+# 检查与最新协议的差异
+co diff [PATH]
 
-# 仅同步特定目录
-co sync my-project/ --only core,adapters
-
-# 检查差异
-co diff my-project/
-
-# 升级协议版本
-co upgrade my-project/ --to 3.1.0
+# 同步通用层（不覆盖 project/）
+co sync [PATH]
+co sync -y    # 跳过确认
 ```
+
+### 7.4 CLI 命令概览 (cokodo-agent)
+
+| 命令 | 说明 |
+|------|------|
+| `co init [PATH]` | 创建 `.agent` 协议目录 |
+| `co adapt <cursor\|claude\|copilot\|gemini\|all> [PATH]` | 根据现有 `.agent` 生成 IDE 入口文件（如 CLAUDE.md、AGENTS.md、GEMINI.md、.cursor/rules/*.mdc） |
+| `co detect [PATH]` | 检测项目中已有的 IDE 规约文件（不写入） |
+| `co import [PATH]` | 从检测到的 IDE 规约文件导入项目名与规则到 `.agent/project/` |
+| `co lint [PATH]` | 检查协议合规性 |
+| `co sync [PATH]` | 将本地 `.agent` 与最新协议同步 |
 
 ---
 
@@ -204,7 +216,7 @@ co upgrade my-project/ --to 3.1.0
 
 ### 8.1 协议版本
 
-当前协议版本: **3.0.0**
+当前协议版本: **3.1.1**
 
 版本号在 `manifest.json` 中定义。
 
@@ -237,6 +249,6 @@ co upgrade my-project/ --to 3.1.0
 
 ---
 
-*版本: 1.0.0*
+*版本: 1.1.0*
 *生效日期: 2026-01-26*
 *维护者: ai_workspace*

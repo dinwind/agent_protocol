@@ -2,6 +2,8 @@
 
 > For Qt 6.x projects.
 
+- **Scope**: All Qt/C++/QML files in the project (see [core-rules §3.3](../core-rules.md)).
+
 ---
 
 ## 1. Project Structure
@@ -107,13 +109,13 @@ Item {
 ## 5. Memory Management
 
 ```cpp
-// ✅ Use smart pointers
+// Good: Use smart pointers
 std::unique_ptr<Widget> widget = std::make_unique<Widget>();
 
-// ✅ Qt parent-child ownership
+// Good: Qt parent-child ownership
 auto *button = new QPushButton(parentWidget);  // Parent owns button
 
-// ❌ Avoid raw new without parent
+// Avoid: Avoid raw new without parent
 auto *widget = new QWidget();  // Memory leak risk
 ```
 
@@ -122,11 +124,11 @@ auto *widget = new QWidget();  // Memory leak risk
 ## 6. Signal/Slot Connections
 
 ```cpp
-// ✅ New syntax (compile-time checked)
+// Good: New syntax (compile-time checked)
 connect(button, &QPushButton::clicked,
         this, &MyClass::handleClick);
 
-// ✅ Lambda
+// Good: Lambda
 connect(button, &QPushButton::clicked, this, [this]() {
     handleClick();
 });
@@ -137,12 +139,12 @@ connect(button, &QPushButton::clicked, this, [this]() {
 ## 7. Animation Guidelines
 
 ```qml
-// ✅ Smooth transitions (250-300ms)
+// Good: Smooth transitions (250-300ms)
 Behavior on opacity {
     NumberAnimation { duration: 250 }
 }
 
-// ✅ State-based animations
+// Good: State-based animations
 states: [
     State {
         name: "expanded"

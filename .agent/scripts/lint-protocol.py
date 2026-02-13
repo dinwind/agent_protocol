@@ -2,7 +2,7 @@
 """
 Protocol Compliance Linter
 
-Based on .agent/meta/agent-protocol-rules.md v3.0.0
+Based on .agent/meta/agent-protocol-rules.md v3.1.0
 
 Checks:
 1. directory-structure  - Standard directories exist
@@ -68,6 +68,7 @@ class ProtocolLinter:
         "tech-stack.md",
         "known-issues.md",
         "commands.md",
+        "deploy.md",
         "session-journal.md",
     ]
 
@@ -338,13 +339,13 @@ class ProtocolLinter:
         """Check kebab-case naming convention for .md files."""
         # kebab-case pattern (allows single word)
         pattern = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
-        # Exceptions
+        # Exceptions (SKILL.md uppercase; adapter templates keep .template.md)
         exceptions = {"MANIFEST.json", "VERSION", "SKILL.md", "README.md"}
 
         for path in self.agent_dir.rglob("*.md"):
             relative = path.relative_to(self.agent_dir)
 
-            if path.name in exceptions:
+            if path.name in exceptions or ".template." in path.name:
                 continue
 
             if pattern.match(path.name):
@@ -397,7 +398,7 @@ class ProtocolLinter:
         """Check for hardcoded paths in locked directories."""
         pollution_patterns = [
             (r"[A-Z]:\\\\", "Windows path"),
-            (r"[A-Z]:/", "Windows path"),
+            (r"(?<![tT])(?<![pP])(?<![xX])[A-Z]:/", "Windows path"),  # exclude http(s):, ftp:
             (r"/home/\w+/", "Unix home path"),
             (r"/Users/\w+/", "macOS user path"),
             (r"localhost:\d+", "Hardcoded localhost"),
@@ -451,9 +452,13 @@ class ProtocolLinter:
                 if link_target.startswith(('http://', 'https://', '#', 'mailto:')):
                     continue
 
-                # Parse relative path
+                # Parse relative path (templates/ files: resolve as if deployed to .agent or .agent/project)
+                rel_parts = path.relative_to(self.agent_dir).parts
                 if link_target.startswith('/'):
                     target_path = self.agent_dir / link_target[1:]
+                elif "templates" in rel_parts:
+                    base = (self.agent_dir / "project") if "project" in rel_parts else self.agent_dir
+                    target_path = (base / link_target).resolve()
                 else:
                     target_path = path.parent / link_target
 
@@ -469,6 +474,17 @@ class ProtocolLinter:
                         "internal-links",
                         True,
                         f"Link valid: {link_target}",
+                        str(relative),
+                        line_num,
+                    ))
+                elif "core" in rel_parts and (
+                    link_target.startswith(("docs/", "doc/")) or link_target in ("CONTRIBUTING.md", "README.md")
+                ):
+                    # core/ may reference project-root placeholders (e.g. docs/, CONTRIBUTING.md)
+                    self.results.append(LintResult(
+                        "internal-links",
+                        True,
+                        f"Optional project placeholder: {link_target}",
                         str(relative),
                         line_num,
                     ))
@@ -611,7 +627,7 @@ def main():
     else:  # text format
         print("=" * 50)
         print("Protocol Compliance Check")
-        print(f"Based on: agent-protocol-rules.md v3.0.0")
+        print(f"Based on: agent-protocol-rules.md v3.1.0")
         print("=" * 50)
         print()
 

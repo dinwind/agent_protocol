@@ -105,7 +105,92 @@ SkillOutput = {
 
 ---
 
-## 6. Best Practices
+## 6. Parameterized Skills (Multi-Backend Pattern)
+
+When a skill addresses a common concern (e.g., schema comparison, migration) but the implementation varies by tech stack, use the **parameterized skill** pattern instead of forking the skill per project.
+
+### 6.1 Design
+
+```
+skills/
+└── db-schema-compare/
+    ├── SKILL.md              # Unified documentation
+    ├── manifest.json          # Declares supported backends
+    └── scripts/
+        ├── compare_schema.py  # Main entry, dispatches by backend
+        ├── backends/
+        │   ├── prisma.py      # Prisma-specific logic
+        │   ├── sqlalchemy.py  # SQLAlchemy-specific logic
+        │   └── typeorm.py     # TypeORM-specific logic
+        └── base.py            # Shared interface / base class
+```
+
+### 6.2 Manifest Declaration
+
+```json
+{
+  "name": "db-schema-compare",
+  "version": "2.0.0",
+  "description": "Compare ORM schema with actual database",
+  
+  "parameters": {
+    "backend": {
+      "type": "string",
+      "required": true,
+      "enum": ["prisma", "sqlalchemy", "typeorm"],
+      "description": "ORM backend to use"
+    },
+    "connection": {
+      "type": "string",
+      "required": false,
+      "description": "Database connection string (or use Docker auto-detect)"
+    }
+  },
+  
+  "backends": {
+    "prisma": {
+      "description": "Prisma schema comparison",
+      "schema_path": "backend/prisma/schema.prisma"
+    },
+    "sqlalchemy": {
+      "description": "SQLAlchemy model comparison",
+      "model_path": "backend/app/models/"
+    }
+  }
+}
+```
+
+### 6.3 When to Parameterize
+
+| Situation | Approach |
+|-----------|----------|
+| Same concern, different tech stack | Parameterized skill with backends |
+| Completely different concern | Separate skill |
+| Minor project-specific tweak | Config override in `skills/_project/` |
+
+### 6.4 Project-Level Override
+
+Projects can override specific behavior without forking:
+
+```
+skills/_project/
+└── db-schema-compare/
+    └── config.json    # Override parameters for this project
+```
+
+```json
+{
+  "extends": "db-schema-compare",
+  "parameters": {
+    "backend": "sqlalchemy",
+    "connection": "postgresql://localhost:5432/mydb"
+  }
+}
+```
+
+---
+
+## 7. Best Practices
 
 ### Development Checklist
 
@@ -115,6 +200,7 @@ SkillOutput = {
 - [ ] Scripts output structured results
 - [ ] Provide usage examples
 - [ ] Complete documentation
+- [ ] Consider parameterization if the skill could serve multiple tech stacks
 
 ### Naming Conventions
 
@@ -128,4 +214,4 @@ SkillOutput = {
 ---
 
 *This file is the skill module interface specification*
-*Protocol version: 2.1.0*
+*Protocol version: 3.1.0*
