@@ -2,8 +2,8 @@
 
 > Complete guide for setting up AI collaboration protocol in your projects
 
-[![CLI Version](https://img.shields.io/badge/CLI-v1.0.0-blue.svg)](../cokodo-agent)
-[![Protocol Version](https://img.shields.io/badge/Protocol-v2.1.0-green.svg)](../.agent/manifest.json)
+[![CLI Version](https://img.shields.io/badge/CLI-v1.3.0-blue.svg)](../cokodo-agent)
+[![Protocol Version](https://img.shields.io/badge/Protocol-v3.1.0-green.svg)](../.agent/manifest.json)
 
 ---
 
@@ -258,9 +258,12 @@ your-project/
 
 | Tool | Config File | Description |
 |------|-------------|-------------|
-| Cursor | `.cursorrules` | Cursor IDE rules |
-| GitHub Copilot | `.github/copilot-instructions.md` | Copilot instructions |
-| Claude | `.claude/instructions.md` | Claude project instructions |
+| Cursor | `.cursor/rules/agent-protocol.mdc` | Cursor rules (YAML frontmatter) |
+| Claude Code | `CLAUDE.md` | Claude project memory (project root) |
+| GitHub Copilot | `AGENTS.md` | Copilot agent instructions (project root) |
+| Gemini Code Assist | `GEMINI.md` | Gemini context (project root, `@file` imports) |
+
+Generate these with `co adapt <cursor|claude|copilot|gemini|all>` in a project that has `.agent/`. Detect existing IDE instruction files with `co detect`; import from them into `.agent/project/` with `co import`.
 
 ---
 
@@ -333,13 +336,24 @@ pytest tests/
 
 ### Step 3: Configure AI Tools (Optional)
 
-If you need to customize AI tool configurations beyond the generated defaults:
+Generate or refresh IDE entry files from your existing `.agent/`:
 
-| AI Tool | Action |
-|---------|--------|
-| **Cursor** | Edit `.cursorrules` or copy from `.agent/adapters/cursor/rules.template.md` |
-| **GitHub Copilot** | Edit `.github/copilot-instructions.md` |
-| **Claude** | Run `python .agent/adapters/claude/adapt_for_claude.py` |
+```bash
+co adapt all              # Generate CLAUDE.md, AGENTS.md, GEMINI.md, .cursor/rules/
+co adapt cursor           # Cursor only
+co detect                 # List detected IDE instruction files (read-only)
+co import --dry-run       # Preview import from those files into .agent/project/
+co import                 # Import project name and rules into project/context.md and conventions.md
+```
+
+| AI Tool | Generated File | Notes |
+|---------|----------------|-------|
+| **Cursor** | `.cursor/rules/agent-protocol.mdc` | Run `co adapt cursor` |
+| **Claude Code** | `CLAUDE.md` | Run `co adapt claude` |
+| **GitHub Copilot** | `AGENTS.md` | Run `co adapt copilot` |
+| **Gemini** | `GEMINI.md` | Run `co adapt gemini` |
+
+**IDE global rules**: IDEs (Cursor, Claude Code, etc.) may load user/global rules or memory. Generated entry files state at the top that **this repo's `.agent/` and the generated file are the single source of truth**; user/global IDE rules are for editor behavior only. Prefer project-local `.cursor/rules` and `.agent` for project context.
 
 ---
 

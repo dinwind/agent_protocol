@@ -15,7 +15,7 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 - **`skills/`**: Modular capabilities (on-demand tools and specifications).
 - **`adapters/`**: AI tool adapters (Cursor, Claude, Copilot, Gemini).
 
-**Tooling**: The cokodo-agent CLI provides `co adapt` (generate IDE entry files from `.agent/`), `co detect` (detect existing IDE instruction files in the project), and `co import` (import from those files into `project/`). See the [usage guide](https://github.com/dinwind/agent_protocol/blob/main/docs/usage-guide_cn.md) for details.
+**Tooling**: The cokodo-agent CLI provides `co adapt` (generate IDE entry files from `.agent/`), `co detect` (detect existing IDE instruction files in the project), and `co import` (import from those files into `project/`). See the [usage guide](https://github.com/dinwind/agent_protocol/blob/main/docs/usage-guide_cn.md) for details. When using an IDE, prefer only this repository's `.cursor/rules` and `.agent` for project context; avoid mixing in user/global IDE rules for project-specific conventions.
 
 ---
 

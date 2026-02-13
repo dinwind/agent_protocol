@@ -2,8 +2,8 @@
 
 > 在项目中快速配置 AI 协作协议的完整指南
 
-[![CLI 版本](https://img.shields.io/badge/CLI-v1.2.0-blue.svg)](../cokodo-agent)
-[![协议版本](https://img.shields.io/badge/Protocol-v3.0.0-green.svg)](../.agent/manifest.json)
+[![CLI 版本](https://img.shields.io/badge/CLI-v1.3.0-blue.svg)](../cokodo-agent)
+[![协议版本](https://img.shields.io/badge/Protocol-v3.1.0-green.svg)](../.agent/manifest.json)
 
 ---
 
@@ -11,7 +11,7 @@
 
 - [安装](#安装)
 - [快速开始](#快速开始)
-- [命令参考](#命令参考)
+- [命令参考](#命令参考)（含 `co adapt`、`co detect`、`co import`）
 - [生成的目录结构](#生成的目录结构)
 - [配置选项](#配置选项)
 - [初始化后设置](#初始化后设置)
@@ -35,6 +35,16 @@ pip install cokodo-agent
 
 ```bash
 pipx install cokodo-agent
+```
+
+### 可选：网络拉取协议
+
+默认安装**不包含** `httpx`，仅使用内置协议（`co init --offline`）。若需要从 GitHub 拉取最新协议，请安装可选依赖：
+
+```bash
+pip install "cokodo-agent[network]"
+# 或
+pipx inject cokodo-agent httpx
 ```
 
 ### 验证安装
@@ -252,6 +262,137 @@ co sync -y
 co sync --offline -y
 ```
 
+### `co adapt <cursor|claude|copilot|gemini|all> [PATH]`
+
+在已有 `.agent` 的项目中，**生成或更新** IDE 入口文件，无需重新执行 `co init`。
+
+| 参数 | 说明 |
+|------|------|
+| `cursor` | 生成 `.cursor/rules/agent-protocol.mdc`（Cursor 规则，含 YAML frontmatter） |
+| `claude` | 生成 `CLAUDE.md`（项目根，Claude Code 自动加载） |
+| `copilot` | 生成 `AGENTS.md`（项目根，GitHub Copilot Agent 模式识别） |
+| `gemini` | 生成 `GEMINI.md`（项目根，支持 `@file` 导入语法） |
+| `all` | 生成以上全部 |
+
+**示例：**
+
+```bash
+# 在项目根执行（当前目录需已有 .agent）
+co adapt cursor        # 仅生成 Cursor 入口
+co adapt claude        # 仅生成 Claude 入口
+co adapt all           # 生成所有 IDE 入口文件
+
+# 指定项目路径
+co adapt cursor ../other-project
+```
+
+生成内容会指向 `.agent/start-here.md` 等协议文件，项目名从 `.agent/project/context.md` 的「Project Name」读取。
+
+**与 `co init` 的区别：**
+
+- `co init`：新建整个 `.agent`，并可在交互中勾选要生成的 IDE（Cursor/Claude 等）。
+- `co adapt`：不创建或覆盖 `.agent`，只根据现有 `.agent` 写出/更新 IDE 入口文件。
+
+#### 与 IDE 全局规则配合（推荐）
+
+Claude、Cursor 等 IDE 会加载**用户级/全局**的规则或记忆，可能与当前项目的 `.agent/` 混在一起。生成出的入口文件（如 `agent-protocol.mdc`、`CLAUDE.md`）已在开头声明：**本仓库内 `.agent/` 与本文件为项目规则的唯一来源；用户/全局 IDE 规则仅用于编辑器行为；若冲突则以本仓库协议为准。** 建议使用 .agent 协议时，尽量不在 Cursor/IDE 的「用户级/全局规则」里放与**当前项目强相关**的约定，或明确仅依赖项目内的 `.cursor/rules` 与 `.agent`，以减少信息混乱。
+
+#### 原理说明
+
+**1. 设计思路（指针策略）**
+
+- **单一事实来源**：协议与项目上下文只维护在 `.agent/` 下（如 `start-here.md`、`project/context.md`）。
+- **适配层尽量薄**：各 IDE 的入口文件（如 `CLAUDE.md`、`.cursor/rules/*.mdc`）**不复制**协议正文，只写「请先读哪个文件、遵守哪些要点」。
+- **效果**：协议更新时只需执行 `co sync` 更新 `.agent/`，再执行 `co adapt <tool>` 即可刷新 IDE 入口，避免在多个 IDE 配置里重复维护同一套规则。
+
+**2. 执行流程**
+
+```
+co adapt <tool> [PATH]
+       │
+       ▼
+  find_agent_dir(path)  →  找到项目根下的 .agent 目录（否则报错退出）
+       │
+       ▼
+  解析 tool 参数  →  cursor | claude | copilot | gemini | all
+       │
+       ▼
+  _project_name_from_context(agent_dir)  →  从 .agent/project/context.md 的「Project Name」段读取项目名
+       │
+       ▼
+  对每个 tool_key 调用对应生成函数
+       │
+       ├─ cursor  →  .cursor/rules/agent-protocol.mdc（YAML frontmatter + 正文）
+       ├─ claude  →  CLAUDE.md（项目根）
+       ├─ copilot →  AGENTS.md（项目根）
+       └─ gemini  →  GEMINI.md（项目根，含 @.agent/ 导入）
+```
+
+**3. 生成内容的特点**
+
+- 所有适配器文案都**显式要求**「先读 `.agent/start-here.md`」或「参考 `.agent/project/context.md`」等。
+- 仅包含少量摘要（如 UTF-8、路径用 `/`、`autotest_` 前缀），详细规则仍在 `.agent/core/` 中，由 AI 按入口指引自行加载。
+
+#### 如何确认方案有效
+
+| 步骤 | 做法 |
+|------|------|
+| **1. 文件与内容** | 执行 `co adapt cursor`（或其它 tool）后，检查对应文件是否生成、内容是否包含「读 `.agent/start-here.md`」等说明。 |
+| **2. Cursor** | 在 Cursor 中打开该项目，新建对话或 Composer，看是否自动带上项目规则；在对话中问「本项目协作协议入口在哪」，应能答出 `.agent/start-here.md`。 |
+| **3. Claude Code** | 在 Claude Code 中打开该项目，确认是否加载根目录 `CLAUDE.md`；提问「先读哪个文件建立上下文」，应指向 `.agent/start-here.md`。 |
+| **4. GitHub Copilot** | 在已配置 Copilot 的仓库中，确认 `AGENTS.md` 存在且被 Copilot Agent 模式使用。 |
+| **5. Gemini** | 确认项目根存在 `GEMINI.md`，且其中包含 `@.agent/start-here.md` 等导入。 |
+| **6. 协议更新一致性** | 修改 `.agent/` 内容后重新执行 `co adapt all`，再在各 IDE 中确认行为或对话仍以最新协议为准。 |
+
+**简要自检命令示例：**
+
+```bash
+# 生成后检查文件存在且含协议入口路径
+co adapt cursor
+# Windows PowerShell:
+Get-Content .cursor/rules/agent-protocol.mdc | Select-String "start-here.md"
+# Linux/macOS:
+grep -l "start-here.md" .cursor/rules/agent-protocol.mdc && echo "OK: Cursor 规则指向协议入口"
+```
+
+### `co detect [PATH]`
+
+**检测**项目中已有的 IDE 规约文件（只读不写）。
+
+扫描项目根下是否存在各 IDE 官方识别的规约文件，并列出路径与格式版本（current / legacy）。支持：`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/*.mdc`，以及旧版路径（如 `.cursorrules`、`.claude/instructions.md`、`.github/copilot-instructions.md`、`.agent/rules/*.md`）。
+
+**示例：**
+
+```bash
+co detect              # 当前目录
+co detect D:\my-project
+```
+
+无检测到文件时会提示 `No IDE instruction files detected.`。
+
+### `co import [PATH]`
+
+从已检测到的 IDE 规约文件中**导入**项目名与规则到 `.agent/project/`。
+
+**前提**：项目内必须先存在 `.agent` 目录（否则先执行 `co init`）。
+
+| 选项 | 简写 | 说明 |
+|------|------|------|
+| `--source` | `-s` | 仅从指定 IDE 导入：`cursor` \| `claude` \| `copilot` \| `gemini`；默认 `auto`（全部） |
+| `--dry-run` | | 只显示将导入的内容，不写入文件 |
+
+**示例：**
+
+```bash
+co import --dry-run    # 先预览
+co import              # 从所有检测到的文件导入
+co import -s claude     # 仅从 CLAUDE.md 导入
+```
+
+**会写入的内容**：从规约中解析出的项目名会写入或更新 `project/context.md` 的「## Project Name」；提取的规则条目会追加到 `project/conventions.md` 的「## Imported Rules」下（若该文件不存在则会创建）。
+
+**典型场景**：项目里先有 `CLAUDE.md` 或 `AGENTS.md` 等，希望迁到 `.agent` 协议时，可先 `co init` 再 `co import` 将现有规约信息导入 `project/`。
+
 ### `co context [PATH]`
 
 根据技术栈和任务类型获取相关上下文文件。
@@ -329,15 +470,23 @@ co update-checksums
 
 ### `co version`
 
-显示 CLI 和内置协议的版本信息。
+显示 CLI、内置协议版本，以及**各第三方 IDE 规约版本**（解析器/生成器所依据的官方文档版本）。IDE 演进较快，此处用于追踪我们当前适配的规约版本与校验日期。
 
 ```bash
 $ co version
-cokodo-agent v1.2.0
+cokodo-agent v1.3.0
 
 Protocol versions:
   Built-in: v3.0.0
+
+IDE spec versions (parser/generator target):
+  claude: 2026-02 (validated 2026-02-13)
+  copilot: 2026-02 (validated 2026-02-13)
+  cursor: 2026-02 (validated 2026-02-13)
+  gemini: 2026-02 (validated 2026-02-13)
 ```
+
+规约版本定义在 `config.IDE_SPEC_VERSIONS` 中；厂商文档变更后需更新该配置并调整解析/生成逻辑。
 
 ---
 
