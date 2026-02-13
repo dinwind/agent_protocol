@@ -162,216 +162,232 @@ def _customize_tech_stack(agent_dir: Path, config: Dict[str, Any]) -> None:
     tech_stack_file.write_text(content, encoding="utf-8")
 
 
+def _project_name_from_context(agent_dir: Path) -> str:
+    """Read project name from .agent/project/context.md if present."""
+    context_file = agent_dir / "project" / "context.md"
+    if not context_file.exists():
+        return "Project"
+    text = context_file.read_text(encoding="utf-8")
+    in_name_section = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if "## " in stripped and "name" in stripped.lower():
+            in_name_section = True
+            continue
+        if in_name_section:
+            if stripped.startswith(("#", "|", "-", ">", "---", "[")):
+                break
+            if stripped:
+                return stripped.replace("{{PROJECT_NAME}}", "Project").strip() or "Project"
+    return "Project"
+
+
+def generate_adapters_for_tools(
+    target_path: Path,
+    agent_dir: Path,
+    tool_keys: list[str],
+) -> None:
+    """
+    Generate IDE adapter entry files for existing .agent directory.
+
+    Each adapter is a thin pointer that instructs the IDE to load
+    ``.agent/start-here.md`` as the protocol entry point.  The actual
+    protocol content lives exclusively inside ``.agent/``; adapters
+    never duplicate it.
+
+    Args:
+        target_path: Project root (parent of .agent)
+        agent_dir: Path to .agent directory
+        tool_keys: One or more of: cursor, claude, copilot, gemini
+    """
+    project_name = _project_name_from_context(agent_dir)
+
+    _GENERATORS: dict[str, Any] = {
+        "cursor": _generate_cursor_adapter,
+        "claude": _generate_claude_adapter,
+        "copilot": _generate_copilot_adapter,
+        "gemini": _generate_gemini_adapter,
+    }
+
+    for tool_key in tool_keys:
+        if tool_key not in AI_TOOLS:
+            continue
+        tool_info = AI_TOOLS[tool_key]
+        if tool_info["file"] is None:
+            continue
+        gen_fn = _GENERATORS.get(tool_key)
+        if gen_fn is None:
+            continue
+        gen_fn(target_path, project_name)
+
+
 def _generate_adapters(target_path: Path, config: Dict[str, Any]) -> None:
-    """Generate AI tool adapter files."""
+    """Generate AI tool adapter files (called from ``generate_protocol``)."""
 
     ai_tools = config.get("ai_tools", [])
+    if not ai_tools:
+        return
+
+    agent_dir = target_path / ".agent"
+    project_name = config.get("project_name", "Project")
+
+    _GENERATORS: dict[str, Any] = {
+        "cursor": _generate_cursor_adapter,
+        "claude": _generate_claude_adapter,
+        "copilot": _generate_copilot_adapter,
+        "gemini": _generate_gemini_adapter,
+    }
 
     for tool_key in ai_tools:
         if tool_key not in AI_TOOLS:
             continue
-
         tool_info = AI_TOOLS[tool_key]
-
-        # Skip if no file to generate (e.g., cokodo mode)
         if tool_info["file"] is None:
             continue
-
-        # Handle Antigravity specially - creates rules directory
-        if tool_key == "antigravity":
-            _generate_antigravity_rules(target_path, config)
+        gen_fn = _GENERATORS.get(tool_key)
+        if gen_fn is None:
             continue
-
-        adapter_file = target_path / cast(str, tool_info["file"])
-
-        # Ensure parent directory exists
-        adapter_file.parent.mkdir(parents=True, exist_ok=True)
-
-        # Generate adapter content
-        content = _get_adapter_content(tool_key, config)
-        adapter_file.write_text(content, encoding="utf-8")
+        gen_fn(target_path, project_name)
 
 
-def _get_adapter_content(tool_key: str, config: Dict[str, Any]) -> str:
-    """Get adapter file content for specific tool."""
+# ---------------------------------------------------------------------------
+# Per-IDE adapter generators
+# ---------------------------------------------------------------------------
 
-    project_name = config.get("project_name", "Project")
+def _generate_cursor_adapter(target_path: Path, project_name: str) -> None:
+    """Generate ``.cursor/rules/agent-protocol.mdc`` with YAML frontmatter.
 
-    if tool_key == "cursor":
-        return f"""# Cursor Rules for {project_name}
+    Official spec (2026): https://docs.cursor.com/context/rules
+    Format: ``.mdc`` files in ``.cursor/rules/`` with YAML frontmatter
+    containing ``description``, ``globs`` (optional), and ``alwaysApply``.
+    """
+    rules_dir = target_path / ".cursor" / "rules"
+    rules_dir.mkdir(parents=True, exist_ok=True)
 
-## Protocol Reference
+    content = f"""---
+description: AI Agent Collaboration Protocol for {project_name} - read .agent/start-here.md first
+alwaysApply: true
+---
+
+# Agent Protocol
 
 This project uses AI Agent Collaboration Protocol.
-Please read `.agent/start-here.md` first to establish context.
+**Read `.agent/start-here.md` first** to establish the full context.
 
-## Quick Reference
+## Essential Files
 
-- Core rules: `.agent/core/core-rules.md`
-- Coding guidelines: `.agent/core/instructions.md`
-- Project context: `.agent/project/context.md`
+1. `.agent/start-here.md` — Protocol entry point (read every session)
+2. `.agent/project/context.md` — Project business context
+3. `.agent/core/core-rules.md` — Non-negotiable core principles
 
-## Key Principles
+## Key Rules
 
-1. Follow UTF-8 encoding explicitly
-2. Use forward slash `/` for paths
-3. Test data must use `autotest_` prefix
-4. No external CDN links
-
-## Loading Priority
-
-1. `.agent/start-here.md` (entry point)
-2. `.agent/quick-reference.md` (cheat sheet)
-3. `.agent/project/context.md` (project-specific)
+- Encoding: UTF-8 (explicit declaration required)
+- Paths: always use forward slash `/`
+- Test data: must use `autotest_` prefix
+- No external CDN links
+- Check `.agent/project/known-issues.md` before starting work
 """
+    (rules_dir / "agent-protocol.mdc").write_text(content, encoding="utf-8")
 
-    elif tool_key == "copilot":
-        return f"""# GitHub Copilot Instructions for {project_name}
 
-## Protocol Reference
+def _generate_claude_adapter(target_path: Path, project_name: str) -> None:
+    """Generate ``CLAUDE.md`` at project root.
 
-This project follows AI Agent Collaboration Protocol.
-Reference: `.agent/start-here.md`
+    Official spec (2026): https://docs.anthropic.com/en/docs/claude-code
+    Format: ``CLAUDE.md`` at project root, auto-loaded every Claude Code session.
+    Additional modular rules can go in ``.claude/rules/*.md`` (optional).
+    """
+    content = f"""# {project_name}
 
-## Coding Standards
+This project uses AI Agent Collaboration Protocol.
 
-- Encoding: UTF-8 (explicit)
-- Paths: Forward slash `/`
-- Test prefix: `autotest_`
-- No CDN links
+## First Step
 
-## Key Files
+Read `.agent/start-here.md` to establish the full collaboration context.
+This is the single entry point for all AI agents working on this project.
 
-- `.agent/core/core-rules.md` - Core principles
-- `.agent/core/instructions.md` - Collaboration guidelines
-- `.agent/project/context.md` - Project context
-- `.agent/quick-reference.md` - Quick reference
+## Essential Files
+
+- `.agent/start-here.md` — Protocol entry point (read every session)
+- `.agent/project/context.md` — Project business context
+- `.agent/core/core-rules.md` — Non-negotiable core principles
+- `.agent/project/tech-stack.md` — Technology stack decisions
+
+## Key Rules
+
+- Encoding: UTF-8 (explicit declaration required)
+- Paths: always use forward slash `/`
+- Test data: must use `autotest_` prefix
+- No external CDN links
+- Check `.agent/project/known-issues.md` before starting work
+"""
+    (target_path / "CLAUDE.md").write_text(content, encoding="utf-8")
+
+
+def _generate_copilot_adapter(target_path: Path, project_name: str) -> None:
+    """Generate ``AGENTS.md`` at project root.
+
+    Official spec (2026): https://docs.github.com/en/copilot
+    ``AGENTS.md`` is recognized by GitHub Copilot agent mode.
+    Copilot also supports ``CLAUDE.md`` and ``GEMINI.md`` as instruction sources.
+    """
+    content = f"""# {project_name}
+
+This project uses AI Agent Collaboration Protocol.
+
+## First Step
+
+Read `.agent/start-here.md` to establish the full collaboration context.
+This is the single entry point for all AI agents working on this project.
+
+## Essential Files
+
+- `.agent/start-here.md` — Protocol entry point (read every session)
+- `.agent/project/context.md` — Project business context
+- `.agent/core/core-rules.md` — Non-negotiable core principles
+- `.agent/project/tech-stack.md` — Technology stack decisions
+
+## Key Rules
+
+- Encoding: UTF-8 (explicit declaration required)
+- Paths: always use forward slash `/`
+- Test data: must use `autotest_` prefix
+- No external CDN links
 
 ## Before Coding
 
 1. Read `.agent/project/context.md` for business context
 2. Check `.agent/project/tech-stack.md` for tech decisions
-3. Consult `.agent/core/workflows/bug-prevention.md` for known pitfalls
+3. Check `.agent/project/known-issues.md` for known pitfalls
 """
+    (target_path / "AGENTS.md").write_text(content, encoding="utf-8")
 
-    elif tool_key == "claude":
-        return f"""# Claude Instructions for {project_name}
 
-## Protocol
+def _generate_gemini_adapter(target_path: Path, project_name: str) -> None:
+    """Generate ``GEMINI.md`` at project root using ``@file`` import syntax.
+
+    Official spec (2026): https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html
+    Format: ``GEMINI.md`` at project root, auto-loaded by Gemini CLI / Code Assist.
+    Supports ``@relative/path.md`` to inline external file contents.
+    """
+    content = f"""# {project_name}
 
 This project uses AI Agent Collaboration Protocol.
-Start by reading `.agent/start-here.md`.
+The files below are auto-imported for full context.
 
-## Essential Documents
-
-1. `.agent/quick-reference.md` - One-page cheat sheet
-2. `.agent/core/core-rules.md` - Non-negotiable rules
-3. `.agent/project/context.md` - Project context
-
-## Rules
-
-- Always use UTF-8 encoding
-- Use forward slash for paths
-- Test data prefix: `autotest_`
-- No external CDN dependencies
-"""
-
-    return f"# AI Instructions for {project_name}\n\nSee `.agent/start-here.md`\n"
-
-
-def _generate_antigravity_rules(target_path: Path, config: Dict[str, Any]) -> None:
-    """Generate Google Antigravity rules directory."""
-
-    agent_dir = target_path / ".agent"
-    rules_dir = agent_dir / "rules"
-    rules_dir.mkdir(exist_ok=True)
-
-    project_name = config.get("project_name", "Project")
-
-    # Core rules file mapping
-    rule_mappings = {
-        "core-rules.md": {
-            "source": "core/core-rules.md",
-            "title": "Core Rules",
-            "activation": "Always On",
-        },
-        "instructions.md": {
-            "source": "core/instructions.md",
-            "title": "AI Collaboration Guidelines",
-            "activation": "Always On",
-        },
-        "conventions.md": {
-            "source": "core/conventions.md",
-            "title": "Naming and Git Conventions",
-            "activation": "Model Decision",
-        },
-        "security.md": {
-            "source": "core/security.md",
-            "title": "Security Development Standards",
-            "activation": "Manual",
-        },
-    }
-
-    # Create rule reference files
-    for rule_name, rule_config in rule_mappings.items():
-        target_file = rules_dir / rule_name
-        content = f"""# {rule_config['title']}
-
-> Activation Mode: {rule_config['activation']}
-
-For detailed rules, please refer to:
-
-@.agent/{rule_config['source']}
-"""
-        target_file.write_text(content, encoding="utf-8")
-
-    # Create project context rule
-    project_rule = rules_dir / "project-context.md"
-    project_rule.write_text(
-        """# Project Context
-
-> Activation Mode: Always On
-
-Project business context and tech stack information:
+@.agent/start-here.md
 
 @.agent/project/context.md
-@.agent/project/tech-stack.md
-@.agent/project/known-issues.md
-""",
-        encoding="utf-8",
-    )
 
-    # Create README for rules directory
-    readme = rules_dir / "README.md"
-    readme.write_text(
-        f"""# Antigravity Rules for {project_name}
+@.agent/core/core-rules.md
 
-This directory contains workspace rules for Google Antigravity.
+## Key Rules
 
-## Rules Description
-
-| File | Description | Activation Mode |
-|------|-------------|-----------------|
-| `core-rules.md` | Core development rules | Always On |
-| `instructions.md` | AI collaboration guidelines | Always On |
-| `conventions.md` | Naming and Git conventions | Model Decision |
-| `security.md` | Security development standards | Manual (@security) |
-| `project-context.md` | Project context | Always On |
-
-## Activation Modes
-
-- **Always On**: Always applied
-- **Manual**: Manually activate using @rule-name in conversation
-- **Model Decision**: Model decides whether to apply based on task
-- **Glob**: Applied when matching specific file types
-
-## More Information
-
-See [Google Antigravity Rules Documentation](https://antigravity.google/docs/rules-workflows)
-
----
-
-*Generated by cokodo-agent on {datetime.now().strftime('%Y-%m-%d')}*
-""",
-        encoding="utf-8",
-    )
+- Encoding: UTF-8 (explicit declaration required)
+- Paths: always use forward slash `/`
+- Test data: must use `autotest_` prefix
+- No external CDN links
+- Check `.agent/project/known-issues.md` before starting work
+"""
+    (target_path / "GEMINI.md").write_text(content, encoding="utf-8")

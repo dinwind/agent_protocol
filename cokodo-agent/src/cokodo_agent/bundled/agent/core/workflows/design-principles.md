@@ -2,6 +2,8 @@
 
 > Core principles guiding architecture and code design.
 
+- **Scope**: Applies to the **entire project** (architecture and code design).
+
 ---
 
 ## 1. SSOT (Single Source of Truth)
@@ -12,14 +14,14 @@ Each piece of data should have one authoritative source.
 ### Application
 
 ```python
-# ❌ Wrong - multiple config sources
+# Wrong - multiple config sources
 class ComponentA:
     config = yaml.load(open("config.yaml"))
 
 class ComponentB:
     config = yaml.load(open("config.yaml"))
 
-# ✅ Correct - single config manager
+# Correct - single config manager
 class ConfigManager:
     _instance = None
     
@@ -43,12 +45,12 @@ Dependencies should be injected, not created internally.
 ### Application
 
 ```python
-# ❌ Wrong - hard dependency
+# Wrong - hard dependency
 class UserService:
     def __init__(self):
         self.db = PostgresDB()  # Hard to test
 
-# ✅ Correct - dependency injection
+# Correct - dependency injection
 class UserService:
     def __init__(self, db: Database):
         self.db = db
@@ -72,12 +74,12 @@ Choose the simplest solution that works. Don't over-engineer.
 - Refactor when patterns emerge
 
 ```python
-# ❌ Over-engineered for simple case
+# Over-engineered for simple case (wrong)
 class UserRepositoryFactoryBuilder:
     def build_factory(self):
         return UserRepositoryFactory()
 
-# ✅ Simple and direct
+# Simple and direct (correct)
 def get_user(user_id: int) -> User:
     return db.query(User).get(user_id)
 ```
@@ -92,7 +94,7 @@ Each module/function should have one responsibility.
 ### Application
 
 ```python
-# ❌ Mixed concerns
+# Mixed concerns (wrong)
 def process_order(order_data):
     # Validation
     if not order_data.get('items'):
@@ -104,7 +106,7 @@ def process_order(order_data):
     # Notification
     email.send(order_data['email'], "Order confirmed")
 
-# ✅ Separated concerns
+# Separated concerns (correct)
 def validate_order(order_data):
     if not order_data.get('items'):
         raise ValueError("No items")
@@ -129,13 +131,13 @@ Detect and report errors as early as possible.
 ### Application
 
 ```python
-# ❌ Late failure
+# Late failure (wrong)
 def process_file(path):
     content = open(path).read()  # May fail late
     # ... 100 lines of processing ...
     return result
 
-# ✅ Fail fast
+# Fail fast (correct)
 def process_file(path: Path):
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
@@ -156,7 +158,7 @@ Clients should not depend on interfaces they don't use.
 ### Application
 
 ```python
-# ❌ Fat interface
+# Fat interface (wrong)
 class Repository:
     def find(self, id): ...
     def find_all(self): ...
@@ -164,7 +166,7 @@ class Repository:
     def delete(self, id): ...
     def export_to_csv(self): ...  # Not all repos need this
 
-# ✅ Segregated interfaces
+# Segregated interfaces (correct)
 class Readable:
     def find(self, id): ...
     def find_all(self): ...

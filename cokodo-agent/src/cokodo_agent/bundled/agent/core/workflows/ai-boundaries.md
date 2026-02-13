@@ -28,7 +28,7 @@
 - **Architecture changes**: Major design pattern changes or cross-layer dependency introductions.
 - **Data operations**: Batch modifications or deletions involving business data.
 
-### 2.3 Operations Strictly Forbidden (L0) 🚫
+### 2.3 Operations Strictly Forbidden (L0)
 - **Sensitive information**: Accessing, printing, or storing contents from `.env` or credential files.
 - **Security undermining**: Disabling SSL verification, reducing authentication strength.
 - **Unauthorized external interactions**: Sending emails, SMS, or calling paid APIs (unless pre-authorized).

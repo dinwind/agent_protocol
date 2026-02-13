@@ -2,6 +2,8 @@
 
 > Security is not a feature, it's a foundation.
 
+- **Scope**: Applies to the **entire project** (all code that handles input, authentication, or sensitive data).
+
 ---
 
 ## 1. Core Principles
@@ -22,12 +24,12 @@ On failure, default to secure state.
 ### 2.1 Never Trust User Input
 
 ```python
-# ❌ Wrong - direct use of user input
+# Wrong - direct use of user input
 def get_user(user_id):
     query = f"SELECT * FROM users WHERE id = {user_id}"
     return db.execute(query)
 
-# ✅ Correct - parameterized query
+# Correct - parameterized query
 def get_user(user_id: int):
     query = "SELECT * FROM users WHERE id = ?"
     return db.execute(query, [user_id])
@@ -88,10 +90,10 @@ def mask_sensitive(value: str) -> str:
         return "****"
     return value[:2] + "****" + value[-2:]
 
-# ❌ Wrong
+# Wrong
 logger.info(f"Token: {token}")
 
-# ✅ Correct
+# Correct
 logger.info(f"Token: {mask_sensitive(token)}")
 ```
 
@@ -100,10 +102,10 @@ logger.info(f"Token: {mask_sensitive(token)}")
 ```python
 import os
 
-# ❌ Wrong - hardcoded
+# Wrong - hardcoded
 API_KEY = "sk-123456789"
 
-# ✅ Correct - from environment
+# Correct - from environment
 API_KEY = os.environ.get("API_KEY")
 if not API_KEY:
     raise ValueError("API_KEY environment variable required")
@@ -132,10 +134,10 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
 ```python
 from markupsafe import escape
 
-# ❌ Wrong
+# Wrong
 html = f"<div>Hello, {user_name}</div>"
 
-# ✅ Correct
+# Correct
 html = f"<div>Hello, {escape(user_name)}</div>"
 ```
 
@@ -166,11 +168,11 @@ def safe_read(base_dir: Path, filename: str) -> str:
 ### 8.1 Don't Expose Internal Details
 
 ```python
-# ❌ Wrong - exposes internal info
+# Wrong - exposes internal info
 except Exception as e:
     return {"error": str(e), "traceback": traceback.format_exc()}
 
-# ✅ Correct - generic message, log details internally
+# Correct - generic message, log details internally
 except Exception as e:
     logger.error(f"Internal error: {e}", exc_info=True)
     return {"error": "An internal error occurred"}

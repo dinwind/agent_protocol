@@ -9,12 +9,18 @@ Similar to `create-react-app`, this tool helps you quickly set up an `.agent` di
 ## Installation
 
 ```bash
-# Install globally
+# Default install (minimal: typer, questionary, rich only)
 pip install cokodo-agent
+
+# With network fetch (GitHub release). Omit for offline-only use.
+pip install cokodo-agent[network]
 
 # Or use pipx (recommended)
 pipx install cokodo-agent
+pipx install "cokodo-agent[network]"   # if you need co init to fetch from GitHub
 ```
+
+**Dependencies:** Default install does not include `httpx`; use `co init --offline` or install with `[network]` to fetch the latest protocol from GitHub.
 
 ---
 
@@ -63,7 +69,7 @@ $ co init
   [ ] Cursor
   [ ] GitHub Copilot
   [ ] Claude Projects
-  [ ] Google Antigravity
+  [ ] Gemini Code Assist
 
   Generating .agent/
   OK Created .agent/
@@ -90,6 +96,9 @@ co init --name "my-app" --stack python -y
 | Command | Description |
 |---------|-------------|
 | `co init [path]` | Create .agent in target directory |
+| `co adapt <cursor\|claude\|copilot\|gemini\|all> [path]` | Generate IDE entry files from existing .agent |
+| `co detect [path]` | Detect IDE instruction files in the project (read-only) |
+| `co import [path]` | Import rules from IDE instruction files into .agent/project/ |
 | `co lint [path]` | Check protocol compliance |
 | `co diff [path]` | Compare local .agent with latest protocol |
 | `co sync [path]` | Sync local .agent with latest protocol |
@@ -179,14 +188,14 @@ my-project/
 
 ### With AI Tool Adapters
 
-Additional files based on selected tools:
+Run `co adapt <tool>` (or `co adapt all`) in a project that already has `.agent/`. Generated files follow each IDE’s official spec:
 
 | Tool | Generated File |
 |------|----------------|
-| Cursor | `.cursorrules` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Claude Projects | `.claude/instructions.md` |
-| Google Antigravity | `.agent/rules/` directory |
+| Cursor | `.cursor/rules/agent-protocol.mdc` (YAML frontmatter) |
+| Claude Code | `CLAUDE.md` (project root) |
+| GitHub Copilot | `AGENTS.md` (project root) |
+| Gemini Code Assist | `GEMINI.md` (project root, supports `@file` imports) |
 
 ---
 

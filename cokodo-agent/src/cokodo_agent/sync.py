@@ -244,3 +244,25 @@ def get_context_files(
             unique_files.append(f)
 
     return unique_files
+
+
+def build_context_content(
+    agent_dir: Path,
+    file_list: list[str],
+    encoding: str = "utf-8",
+) -> dict[str, str]:
+    """
+    Read each file in file_list under agent_dir and return path -> content.
+
+    Missing files are omitted. Used for testing and comparing context across
+    environments.
+    """
+    result = {}
+    for rel_path in file_list:
+        full_path = agent_dir / rel_path
+        if full_path.exists() and full_path.is_file():
+            try:
+                result[rel_path] = full_path.read_text(encoding=encoding)
+            except OSError:
+                result[rel_path] = ""
+    return result

@@ -7,9 +7,20 @@ from rich.console import Console
 
 from cokodo_agent.fetcher.base import BaseFetcher, FetcherError
 from cokodo_agent.fetcher.builtin import BuiltinFetcher
-from cokodo_agent.fetcher.github import GitHubReleaseFetcher
 
 console = Console()
+
+
+def _get_sources() -> List[BaseFetcher]:
+    """Build fetcher list; GitHub is included only when httpx is installed (optional [network] extra)."""
+    sources: List[BaseFetcher] = []
+    try:
+        from cokodo_agent.fetcher.github import GitHubReleaseFetcher
+        sources.append(GitHubReleaseFetcher())
+    except ImportError:
+        pass
+    sources.append(BuiltinFetcher())
+    return sources
 
 
 def get_protocol(offline: bool = False) -> Tuple[Path, str]:
@@ -17,9 +28,8 @@ def get_protocol(offline: bool = False) -> Tuple[Path, str]:
     Get protocol from available sources with priority fallback.
 
     Priority:
-        1. GitHub Release (latest version)
-        2. Remote Server (reserved, not implemented)
-        3. Built-in (offline fallback)
+        1. GitHub Release (when httpx installed via pip install cokodo-agent[network])
+        2. Built-in (offline fallback)
 
     Args:
         offline: If True, skip network sources and use built-in directly
@@ -37,12 +47,7 @@ def get_protocol(offline: bool = False) -> Tuple[Path, str]:
         fetcher = BuiltinFetcher()
         return fetcher.fetch()
 
-    # Define sources with priority
-    sources: List[BaseFetcher] = [
-        GitHubReleaseFetcher(),  # Priority 1
-        # RemoteServerFetcher(),  # Priority 2 (reserved)
-        BuiltinFetcher(),  # Priority 3 (fallback)
-    ]
+    sources = _get_sources()
 
     errors = []
 

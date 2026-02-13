@@ -2,6 +2,8 @@
 
 This file defines project naming conventions, Git conventions, and documentation format standards.
 
+- **Scope**: Section 1.1 applies to the **`.agent` directory only**. Sections 1.2 and below apply to the **entire project** (source code, docs, repo).
+
 ---
 
 ## 1. File Naming Conventions
@@ -10,7 +12,7 @@ This file defines project naming conventions, Git conventions, and documentation
 
 **Mandatory kebab-case (zero exceptions)**
 
-| Type | Correct ✅ | Wrong ❌ |
+| Type | Correct [OK] | Wrong [X] |
 |------|-----------|----------|
 | Markdown | `start-here.md`, `bug-prevention.md` | `StartHere.md`, `bug_prevention.md` |
 | Directory | `stack-specs/`, `ai-integration/` | `StackSpecs/`, `ai_integration/` |

@@ -2,6 +2,8 @@
 
 This file defines AI assistant collaboration guidelines and behavior standards during project development.
 
+- **Scope**: These guidelines apply to **all project development** (source code, tests, docs, tooling), not only to content under `.agent`.
+
 ---
 
 ## 1. Session Initialization

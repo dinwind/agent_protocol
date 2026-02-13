@@ -2,6 +2,8 @@
 
 > Git conventions and workflows.
 
+- **Scope**: All commits and branch naming in the project.
+
 ---
 
 ## 1. Branch Naming

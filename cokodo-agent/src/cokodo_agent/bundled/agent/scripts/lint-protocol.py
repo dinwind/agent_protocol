@@ -2,7 +2,7 @@
 """
 Protocol Compliance Linter
 
-Based on .agent/meta/agent-protocol-rules.md v3.0.0
+Based on .agent/meta/agent-protocol-rules.md v3.1.0
 
 Checks:
 1. directory-structure  - Standard directories exist
@@ -30,7 +30,6 @@ from typing import NamedTuple
 
 class LintResult(NamedTuple):
     """Check result."""
-
     rule: str
     passed: bool
     message: str
@@ -69,6 +68,7 @@ class ProtocolLinter:
         "tech-stack.md",
         "known-issues.md",
         "commands.md",
+        "deploy.md",
         "session-journal.md",
     ]
 
@@ -87,12 +87,11 @@ class ProtocolLinter:
         self.results: list[LintResult] = []
         self.manifest = self._load_manifest()
 
-    def _load_manifest(self) -> dict[str, object]:
+    def _load_manifest(self) -> dict:
         """Load manifest.json."""
         manifest_path = self.agent_dir / "manifest.json"
         if manifest_path.exists():
-            result: dict[str, object] = json.loads(manifest_path.read_text(encoding="utf-8"))
-            return result
+            return json.loads(manifest_path.read_text(encoding="utf-8"))
         return {}
 
     @staticmethod
@@ -164,98 +163,79 @@ class ProtocolLinter:
         for dir_name in self.STANDARD_DIRS:
             dir_path = self.agent_dir / dir_name
             if dir_path.exists() and dir_path.is_dir():
-                self.results.append(
-                    LintResult(
-                        "directory-structure",
-                        True,
-                        f"Directory exists: {dir_name}/",
-                        dir_name,
-                    )
-                )
+                self.results.append(LintResult(
+                    "directory-structure",
+                    True,
+                    f"Directory exists: {dir_name}/",
+                    dir_name,
+                ))
             else:
-                self.results.append(
-                    LintResult(
-                        "directory-structure",
-                        False,
-                        f"Missing standard directory: {dir_name}/",
-                        dir_name,
-                    )
-                )
+                self.results.append(LintResult(
+                    "directory-structure",
+                    False,
+                    f"Missing standard directory: {dir_name}/",
+                    dir_name,
+                ))
 
     def check_required_files(self) -> None:
         """Check required files in project/ directory."""
         project_dir = self.agent_dir / "project"
 
         if not project_dir.exists():
-            self.results.append(
-                LintResult(
-                    "required-files",
-                    False,
-                    "project/ directory does not exist",
-                    "project",
-                )
-            )
+            self.results.append(LintResult(
+                "required-files",
+                False,
+                "project/ directory does not exist",
+                "project",
+            ))
             return
 
         for file_name in self.REQUIRED_PROJECT_FILES:
             file_path = project_dir / file_name
             if file_path.exists():
-                self.results.append(
-                    LintResult(
-                        "required-files",
-                        True,
-                        "Required file exists",
-                        f"project/{file_name}",
-                    )
-                )
+                self.results.append(LintResult(
+                    "required-files",
+                    True,
+                    f"Required file exists",
+                    f"project/{file_name}",
+                ))
             else:
-                self.results.append(
-                    LintResult(
-                        "required-files",
-                        False,
-                        "Missing required file",
-                        f"project/{file_name}",
-                    )
-                )
+                self.results.append(LintResult(
+                    "required-files",
+                    False,
+                    f"Missing required file",
+                    f"project/{file_name}",
+                ))
 
         # Also check root required files
         for file_name in self.LOCKED_FILES:
             file_path = self.agent_dir / file_name
             if file_path.exists():
-                self.results.append(
-                    LintResult(
-                        "required-files",
-                        True,
-                        "Required file exists",
-                        file_name,
-                    )
-                )
+                self.results.append(LintResult(
+                    "required-files",
+                    True,
+                    f"Required file exists",
+                    file_name,
+                ))
             else:
-                self.results.append(
-                    LintResult(
-                        "required-files",
-                        False,
-                        "Missing required file",
-                        file_name,
-                    )
-                )
+                self.results.append(LintResult(
+                    "required-files",
+                    False,
+                    f"Missing required file",
+                    file_name,
+                ))
 
     def check_integrity(self) -> None:
         """Check integrity of locked files using SHA256 checksums."""
-        checksums_obj = self.manifest.get("checksums", {})
-        stored_checksums: dict[str, str] = (
-            checksums_obj if isinstance(checksums_obj, dict) else {}
-        )
+        stored_checksums = self.manifest.get("checksums", {})
 
         if not stored_checksums:
-            self.results.append(
-                LintResult(
-                    "integrity-violation",
-                    False,
-                    "No checksums found in manifest.json. Run 'update-checksums' to generate.",
-                    "manifest.json",
-                )
-            )
+            self.results.append(LintResult(
+                "integrity-violation",
+                False,
+                "No checksums found in manifest.json. Run 'update-checksums' to generate.",
+                "manifest.json",
+            ))
             return
 
         locked_files = self.get_all_locked_files()
@@ -265,62 +245,52 @@ class ProtocolLinter:
 
             if rel_path not in stored_checksums:
                 # New file not in checksums - could be unauthorized addition
-                self.results.append(
-                    LintResult(
-                        "integrity-violation",
-                        False,
-                        "File not in checksums (possibly unauthorized addition)",
-                        rel_path,
-                    )
-                )
+                self.results.append(LintResult(
+                    "integrity-violation",
+                    False,
+                    f"File not in checksums (possibly unauthorized addition)",
+                    rel_path,
+                ))
                 continue
 
             if not file_path.exists():
-                self.results.append(
-                    LintResult(
-                        "integrity-violation",
-                        False,
-                        "Locked file missing",
-                        rel_path,
-                    )
-                )
+                self.results.append(LintResult(
+                    "integrity-violation",
+                    False,
+                    f"Locked file missing",
+                    rel_path,
+                ))
                 continue
 
             current_hash = self.compute_sha256(file_path)
             expected_hash = stored_checksums[rel_path]
 
             if current_hash == expected_hash:
-                self.results.append(
-                    LintResult(
-                        "integrity-violation",
-                        True,
-                        "Integrity verified",
-                        rel_path,
-                    )
-                )
+                self.results.append(LintResult(
+                    "integrity-violation",
+                    True,
+                    f"Integrity verified",
+                    rel_path,
+                ))
             else:
-                self.results.append(
-                    LintResult(
-                        "integrity-violation",
-                        False,
-                        "File modified (hash mismatch)",
-                        rel_path,
-                    )
-                )
+                self.results.append(LintResult(
+                    "integrity-violation",
+                    False,
+                    f"File modified (hash mismatch)",
+                    rel_path,
+                ))
 
         # Check for files in checksums that no longer exist
         for rel_path in stored_checksums:
             if rel_path not in locked_files:
                 file_path = self.agent_dir / rel_path
                 if not file_path.exists():
-                    self.results.append(
-                        LintResult(
-                            "integrity-violation",
-                            False,
-                            "Locked file deleted",
-                            rel_path,
-                        )
-                    )
+                    self.results.append(LintResult(
+                        "integrity-violation",
+                        False,
+                        f"Locked file deleted",
+                        rel_path,
+                    ))
 
     def check_start_here_spec(self) -> None:
         """Check start-here.md does not contain project-specific info."""
@@ -348,58 +318,50 @@ class ProtocolLinter:
             if matches:
                 found_violation = True
                 for match in matches:
-                    line_num = content[: match.start()].count("\n") + 1
-                    self.results.append(
-                        LintResult(
-                            "start-here-spec",
-                            False,
-                            f"Should not contain {desc}: '{match.group().strip()}'",
-                            "start-here.md",
-                            line_num,
-                        )
-                    )
+                    line_num = content[:match.start()].count('\n') + 1
+                    self.results.append(LintResult(
+                        "start-here-spec",
+                        False,
+                        f"Should not contain {desc}: '{match.group().strip()}'",
+                        "start-here.md",
+                        line_num,
+                    ))
 
         if not found_violation:
-            self.results.append(
-                LintResult(
-                    "start-here-spec",
-                    True,
-                    "No project-specific content detected",
-                    "start-here.md",
-                )
-            )
+            self.results.append(LintResult(
+                "start-here-spec",
+                True,
+                "No project-specific content detected",
+                "start-here.md",
+            ))
 
     def check_naming_convention(self) -> None:
         """Check kebab-case naming convention for .md files."""
         # kebab-case pattern (allows single word)
         pattern = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
-        # Exceptions
+        # Exceptions (SKILL.md uppercase; adapter templates keep .template.md)
         exceptions = {"MANIFEST.json", "VERSION", "SKILL.md", "README.md"}
 
         for path in self.agent_dir.rglob("*.md"):
             relative = path.relative_to(self.agent_dir)
 
-            if path.name in exceptions:
+            if path.name in exceptions or ".template." in path.name:
                 continue
 
             if pattern.match(path.name):
-                self.results.append(
-                    LintResult(
-                        "naming-convention",
-                        True,
-                        "Follows kebab-case",
-                        str(relative),
-                    )
-                )
+                self.results.append(LintResult(
+                    "naming-convention",
+                    True,
+                    "Follows kebab-case",
+                    str(relative),
+                ))
             else:
-                self.results.append(
-                    LintResult(
-                        "naming-convention",
-                        False,
-                        f"Should use kebab-case: {path.name}",
-                        str(relative),
-                    )
-                )
+                self.results.append(LintResult(
+                    "naming-convention",
+                    False,
+                    f"Should use kebab-case: {path.name}",
+                    str(relative),
+                ))
 
     def check_skills_placement(self) -> None:
         """Check project-specific skills are in _project/ directory."""
@@ -410,37 +372,33 @@ class ProtocolLinter:
 
         # Get all items directly under skills/
         for item in skills_dir.iterdir():
-            if item.name.startswith("."):
+            if item.name.startswith('.'):
                 continue
 
             relative = item.relative_to(self.agent_dir)
 
             # Check if it's a standard skill or _project
             if item.name in self.LOCKED_SKILLS or item.name == "_project":
-                self.results.append(
-                    LintResult(
-                        "skills-placement",
-                        True,
-                        "Valid skill location",
-                        str(relative),
-                    )
-                )
+                self.results.append(LintResult(
+                    "skills-placement",
+                    True,
+                    f"Valid skill location",
+                    str(relative),
+                ))
             else:
                 # Non-standard item in skills/ root
-                self.results.append(
-                    LintResult(
-                        "skills-placement",
-                        False,
-                        f"Project skill must be in skills/_project/: {item.name}",
-                        str(relative),
-                    )
-                )
+                self.results.append(LintResult(
+                    "skills-placement",
+                    False,
+                    f"Project skill must be in skills/_project/: {item.name}",
+                    str(relative),
+                ))
 
     def check_engine_pollution(self) -> None:
         """Check for hardcoded paths in locked directories."""
         pollution_patterns = [
             (r"[A-Z]:\\\\", "Windows path"),
-            (r"[A-Z]:/", "Windows path"),
+            (r"(?<![tT])(?<![pP])(?<![xX])[A-Z]:/", "Windows path"),  # exclude http(s):, ftp:
             (r"/home/\w+/", "Unix home path"),
             (r"/Users/\w+/", "macOS user path"),
             (r"localhost:\d+", "Hardcoded localhost"),
@@ -462,30 +420,26 @@ class ProtocolLinter:
                     if matches:
                         found_pollution = True
                         for match in matches:
-                            line_num = content[: match.start()].count("\n") + 1
-                            self.results.append(
-                                LintResult(
-                                    "engine-pollution",
-                                    False,
-                                    f"Found {desc}: {match.group()}",
-                                    str(relative),
-                                    line_num,
-                                )
-                            )
+                            line_num = content[:match.start()].count('\n') + 1
+                            self.results.append(LintResult(
+                                "engine-pollution",
+                                False,
+                                f"Found {desc}: {match.group()}",
+                                str(relative),
+                                line_num,
+                            ))
 
                 if not found_pollution:
-                    self.results.append(
-                        LintResult(
-                            "engine-pollution",
-                            True,
-                            "No pollution detected",
-                            str(relative),
-                        )
-                    )
+                    self.results.append(LintResult(
+                        "engine-pollution",
+                        True,
+                        "No pollution detected",
+                        str(relative),
+                    ))
 
     def check_internal_links(self) -> None:
         """Check internal link validity."""
-        link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+        link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
 
         for path in self.agent_dir.rglob("*.md"):
             relative = path.relative_to(self.agent_dir)
@@ -495,42 +449,53 @@ class ProtocolLinter:
                 link_text, link_target = match.groups()
 
                 # Skip external links and anchors
-                if link_target.startswith(("http://", "https://", "#", "mailto:")):
+                if link_target.startswith(('http://', 'https://', '#', 'mailto:')):
                     continue
 
-                # Parse relative path
-                if link_target.startswith("/"):
+                # Parse relative path (templates/ files: resolve as if deployed to .agent or .agent/project)
+                rel_parts = path.relative_to(self.agent_dir).parts
+                if link_target.startswith('/'):
                     target_path = self.agent_dir / link_target[1:]
+                elif "templates" in rel_parts:
+                    base = (self.agent_dir / "project") if "project" in rel_parts else self.agent_dir
+                    target_path = (base / link_target).resolve()
                 else:
                     target_path = path.parent / link_target
 
                 # Handle anchors in path
                 target_str = str(target_path)
-                if "#" in target_str:
-                    target_path = Path(target_str.split("#")[0])
+                if '#' in target_str:
+                    target_path = Path(target_str.split('#')[0])
 
-                line_num = content[: match.start()].count("\n") + 1
+                line_num = content[:match.start()].count('\n') + 1
 
                 if target_path.exists():
-                    self.results.append(
-                        LintResult(
-                            "internal-links",
-                            True,
-                            f"Link valid: {link_target}",
-                            str(relative),
-                            line_num,
-                        )
-                    )
+                    self.results.append(LintResult(
+                        "internal-links",
+                        True,
+                        f"Link valid: {link_target}",
+                        str(relative),
+                        line_num,
+                    ))
+                elif "core" in rel_parts and (
+                    link_target.startswith(("docs/", "doc/")) or link_target in ("CONTRIBUTING.md", "README.md")
+                ):
+                    # core/ may reference project-root placeholders (e.g. docs/, CONTRIBUTING.md)
+                    self.results.append(LintResult(
+                        "internal-links",
+                        True,
+                        f"Optional project placeholder: {link_target}",
+                        str(relative),
+                        line_num,
+                    ))
                 else:
-                    self.results.append(
-                        LintResult(
-                            "internal-links",
-                            False,
-                            f"Broken link: {link_target}",
-                            str(relative),
-                            line_num,
-                        )
-                    )
+                    self.results.append(LintResult(
+                        "internal-links",
+                        False,
+                        f"Broken link: {link_target}",
+                        str(relative),
+                        line_num,
+                    ))
 
 
 def update_checksums(agent_dir: Path) -> None:
@@ -553,7 +518,8 @@ def update_checksums(agent_dir: Path) -> None:
 
     # Write back with proper formatting
     manifest_path.write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8"
     )
 
     print(f"Updated checksums for {len(checksums)} locked files:")
@@ -563,7 +529,7 @@ def update_checksums(agent_dir: Path) -> None:
     print(f"\nChecksums written to {manifest_path}")
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(
         description="Lint .agent protocol compliance (based on agent-protocol-rules.md)"
     )
@@ -601,7 +567,8 @@ def main() -> None:
 
     # Update checksums command
     update_parser = subparsers.add_parser(
-        "update-checksums", help="Update checksums in manifest.json (maintainer only)"
+        "update-checksums",
+        help="Update checksums in manifest.json (maintainer only)"
     )
     update_parser.add_argument(
         "agent_dir",
@@ -660,7 +627,7 @@ def main() -> None:
     else:  # text format
         print("=" * 50)
         print("Protocol Compliance Check")
-        print("Based on: agent-protocol-rules.md v3.0.0")
+        print(f"Based on: agent-protocol-rules.md v3.1.0")
         print("=" * 50)
         print()
 
@@ -691,7 +658,7 @@ def main() -> None:
             print(f"\n[FAIL] {len(errors)} error(s) found")
             sys.exit(1)
         else:
-            print("\n[OK] All checks passed")
+            print(f"\n[OK] All checks passed")
             sys.exit(0)
 
 

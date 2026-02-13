@@ -13,7 +13,9 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 - **`core/`**: Governance engine (generic rules, no project-specific info allowed).
 - **`project/`**: Instance data (project context, tech stack, known issues).
 - **`skills/`**: Modular capabilities (on-demand tools and specifications).
-- **`adapters/`**: AI tool adapters (Cursor, Claude, Copilot, etc.).
+- **`adapters/`**: AI tool adapters (Cursor, Claude, Copilot, Gemini).
+
+**Tooling**: The cokodo-agent CLI provides `co adapt` (generate IDE entry files from `.agent/`), `co detect` (detect existing IDE instruction files in the project), and `co import` (import from those files into `project/`). See the [usage guide](https://github.com/dinwind/agent_protocol/blob/main/docs/usage-guide_cn.md) for details.
 
 ---
 
@@ -32,10 +34,10 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 - [core/conventions.md](core/conventions.md): **Naming and Git conventions**.
 - [core/workflows/bug-prevention.md](core/workflows/bug-prevention.md): **Bug prevention** handbook.
 
-### 3. Tech Stack Specific (Select based on project/tech-stack.md)
+### 3. Stack-Specific (Select based on project/tech-stack.md)
 
-| Tech Stack | File |
-|------------|------|
+| Stack | File |
+|-------|------|
 | Python | [core/stack-specs/python.md](core/stack-specs/python.md) |
 | Rust | [core/stack-specs/rust.md](core/stack-specs/rust.md) |
 | Qt/C++ | [core/stack-specs/qt.md](core/stack-specs/qt.md) |
@@ -45,6 +47,7 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 | Scenario | File |
 |----------|------|
 | **Protocol operation rules** | [meta/agent-protocol-rules.md](meta/agent-protocol-rules.md) |
+| **Protocol self-check** (after editing .agent) | [meta/self-check-prompt.md](meta/self-check-prompt.md) |
 | Session history | [project/session-journal.md](project/session-journal.md) |
 | Known issues | [project/known-issues.md](project/known-issues.md) |
 | Architecture decisions | [project/adr/](project/adr/) |
@@ -64,4 +67,4 @@ This protocol uses an **Engine-Instance Separation** architecture, decoupling ge
 
 ---
 
-*Protocol version: 3.0.0*
+*Protocol version: 3.1.1*

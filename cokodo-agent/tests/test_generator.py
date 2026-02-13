@@ -47,8 +47,8 @@ class TestGenerator:
 
             generate_protocol(source_path, target_path, config)
 
-            assert (target_path / ".cursorrules").exists()
-            assert (target_path / ".github" / "copilot-instructions.md").exists()
+            assert (target_path / ".cursor" / "rules" / "agent-protocol.mdc").exists()
+            assert (target_path / "AGENTS.md").exists()
 
     def test_generate_customizes_context(self):
         """Test that generator customizes context.md."""

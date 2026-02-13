@@ -8,9 +8,15 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from cokodo_agent.config import BUNDLED_PROTOCOL_VERSION, VERSION
+from cokodo_agent.config import (
+    AI_TOOLS,
+    BUNDLED_PROTOCOL_VERSION,
+    IDE_SPEC_VERSIONS,
+    VERSION,
+)
 from cokodo_agent.fetcher import get_protocol
-from cokodo_agent.generator import generate_protocol
+from cokodo_agent.generator import generate_adapters_for_tools, generate_protocol
+from cokodo_agent.parser import HybridParser
 from cokodo_agent.prompts import prompt_config
 
 app = typer.Typer(
@@ -451,6 +457,193 @@ def sync(
 
 
 @app.command()
+def adapt(
+    tool: str = typer.Argument(
+        ...,
+        help="IDE to generate: cursor | claude | copilot | gemini | all",
+    ),
+    path: Optional[Path] = typer.Argument(
+        None,
+        help="Project path (default: current directory)",
+    ),
+) -> None:
+    """Generate IDE entry file(s) from existing .agent protocol."""
+    try:
+        agent_dir = find_agent_dir(path)
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+    target_path = agent_dir.parent
+    tool_lower = tool.strip().lower()
+
+    # Support legacy alias
+    if tool_lower == "antigravity":
+        tool_lower = "gemini"
+
+    if tool_lower == "all":
+        tool_keys = [k for k in AI_TOOLS if AI_TOOLS[k].get("file")]
+    elif tool_lower in AI_TOOLS:
+        tool_keys = [tool_lower]
+    else:
+        console.print(
+            f"[red]Error:[/red] Unknown tool '{tool}'. "
+            f"Choose: cursor, claude, copilot, gemini, all"
+        )
+        raise typer.Exit(1)
+
+    generate_adapters_for_tools(target_path, agent_dir, tool_keys)
+
+    names = [AI_TOOLS[k]["name"] for k in tool_keys]
+    console.print(f"[green]OK[/green] Generated: {', '.join(names)}")
+    for k in tool_keys:
+        info = AI_TOOLS[k]
+        file_path = info.get("file")
+        if file_path:
+            # For directory-mode adapters, show the directory
+            out = target_path / file_path
+            console.print(f"  -> {out}")
+
+
+@app.command()
+def detect(
+    path: Optional[Path] = typer.Argument(
+        None,
+        help="Project path (default: current directory)",
+    ),
+) -> None:
+    """Detect IDE instruction files (Cursor, Claude, Copilot, Gemini) in the project."""
+    target = Path(path) if path else Path.cwd()
+    target = target.resolve()
+    hybrid = HybridParser()
+    detected = hybrid.detect_all(target)
+    if not detected:
+        console.print("[yellow]No IDE instruction files detected.[/yellow]")
+        return
+    console.print("[bold]Detected IDE instruction files:[/bold]")
+    for tool_name, files in sorted(detected.items()):
+        console.print(f"  [cyan]{tool_name}[/cyan]:")
+        for f in files:
+            console.print(f"    {f.path} ({f.format_version})")
+
+
+@app.command("import")
+def import_rules(
+    path: Optional[Path] = typer.Argument(
+        None,
+        help="Project path (default: current directory)",
+    ),
+    source: Optional[str] = typer.Option(
+        None,
+        "--source",
+        "-s",
+        help="Import from: cursor | claude | copilot | gemini | auto (default: auto = all detected)",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be imported without writing",
+    ),
+) -> None:
+    """Import rules from existing IDE instruction files into .agent protocol."""
+    target = Path(path) if path else Path.cwd()
+    target = target.resolve()
+    hybrid = HybridParser()
+    detected = hybrid.detect_all(target)
+    if not detected:
+        console.print("[yellow]No IDE instruction files detected. Run from a project that has CLAUDE.md, AGENTS.md, GEMINI.md, or .cursor/rules/.[/yellow]")
+        raise typer.Exit(0)
+
+    agent_dir = target / ".agent"
+    if not agent_dir.exists():
+        console.print("[red]Error:[/red] No .agent directory. Run [cyan]co init[/cyan] first.")
+        raise typer.Exit(1)
+
+    tools_to_parse = list(detected.keys()) if source in (None, "auto") else [source]
+    if source and source != "auto" and source not in detected:
+        console.print(f"[red]Error:[/red] No files detected for '{source}'.")
+        raise typer.Exit(1)
+
+    parsed_list: list = []
+    for tool in tools_to_parse:
+        if tool in detected:
+            parsed_list.extend(hybrid.parse_tool(target, tool))
+
+    if not parsed_list:
+        console.print("[yellow]Nothing to import.[/yellow]")
+        return
+
+    project_name: str | None = None
+    all_rules: list[str] = []
+    all_refs: set[str] = set()
+    for p in parsed_list:
+        if p.project_name:
+            project_name = project_name or p.project_name
+        all_rules.extend(p.rules)
+        all_refs.update(p.referenced_files)
+
+    console.print()
+    console.print(Panel.fit("[bold]Import summary[/bold]", border_style="blue"))
+    console.print(f"  Project name: {project_name or '(not found)'}")
+    console.print(f"  Rules extracted: {len(all_rules)}")
+    console.print(f"  Referenced .agent files: {len(all_refs)}")
+    for r in sorted(all_refs)[:10]:
+        console.print(f"    - {r}")
+    if len(all_refs) > 10:
+        console.print(f"    ... and {len(all_refs) - 10} more")
+    console.print()
+
+    if dry_run:
+        console.print("[yellow]Dry run. No files written. Remove --dry-run to apply.[/yellow]")
+        return
+
+    written: list[str] = []
+    if project_name and (agent_dir / "project" / "context.md").exists():
+        context_path = agent_dir / "project" / "context.md"
+        content = context_path.read_text(encoding="utf-8")
+        if "## Project Name" in content:
+            lines = content.splitlines()
+            out: list[str] = []
+            i = 0
+            while i < len(lines):
+                if "## Project Name" in lines[i]:
+                    out.append(lines[i])
+                    i += 1
+                    if i < len(lines) and lines[i].strip() and not lines[i].startswith("#"):
+                        i += 1  # skip old value
+                    out.append(project_name)
+                    i += 1
+                    continue
+                out.append(lines[i])
+                i += 1
+            new_content = "\n".join(out)
+            if new_content != content:
+                context_path.write_text(new_content, encoding="utf-8")
+                written.append("project/context.md (project name)")
+    if all_rules and (agent_dir / "project" / "conventions.md").exists():
+        conv_path = agent_dir / "project" / "conventions.md"
+        content = conv_path.read_text(encoding="utf-8")
+        if "## Imported Rules" not in content:
+            content = content.rstrip() + "\n\n## Imported Rules\n\n"
+        for r in all_rules[:20]:
+            if r.strip() and f"- {r}" not in content:
+                content += f"- {r}\n"
+        conv_path.write_text(content, encoding="utf-8")
+        written.append("project/conventions.md (imported rules)")
+    elif all_rules:
+        conv_path = agent_dir / "project" / "conventions.md"
+        conv_path.parent.mkdir(parents=True, exist_ok=True)
+        block = "## Imported Rules\n\n" + "\n".join(f"- {r}" for r in all_rules[:20])
+        conv_path.write_text("# Project Conventions\n\n" + block + "\n", encoding="utf-8")
+        written.append("project/conventions.md (created with imported rules)")
+
+    if written:
+        console.print(f"[green]OK[/green] Updated: {', '.join(written)}")
+    else:
+        console.print("[yellow]No .agent/project files updated (name already set, or no conventions.md).[/yellow]")
+
+
+@app.command()
 def context(
     path: Optional[Path] = typer.Argument(
         None,
@@ -683,6 +876,10 @@ def version() -> None:
     console.print()
     console.print("Protocol versions:")
     console.print(f"  Built-in: v{BUNDLED_PROTOCOL_VERSION}")
+    console.print()
+    console.print("IDE spec versions (parser/generator target):")
+    for tool, info in sorted(IDE_SPEC_VERSIONS.items()):
+        console.print(f"  {tool}: {info['spec_version']} (validated {info['spec_date']})")
 
 
 @app.command()
@@ -748,6 +945,39 @@ def help(
                 ("co sync", "Sync with confirmation"),
                 ("co sync -y", "Sync without confirmation"),
                 ("co sync --dry-run", "Preview changes"),
+            ],
+        },
+        "adapt": {
+            "description": "Generate IDE entry file(s) from existing .agent",
+            "usage": "co adapt <cursor|claude|copilot|gemini|all> [PATH]",
+            "options": [],
+            "examples": [
+                ("co adapt cursor", "Generate .cursor/rules/agent-protocol.mdc"),
+                ("co adapt claude", "Generate CLAUDE.md at project root"),
+                ("co adapt copilot", "Generate AGENTS.md at project root"),
+                ("co adapt gemini", "Generate GEMINI.md at project root"),
+                ("co adapt all", "Generate all IDE adapter files"),
+            ],
+        },
+        "detect": {
+            "description": "Detect IDE instruction files in the project",
+            "usage": "co detect [PATH]",
+            "options": [],
+            "examples": [
+                ("co detect", "List detected CLAUDE.md, AGENTS.md, GEMINI.md, .cursor/rules/"),
+            ],
+        },
+        "import": {
+            "description": "Import rules from IDE instruction files into .agent",
+            "usage": "co import [PATH] [OPTIONS]",
+            "options": [
+                ("-s, --source", "cursor | claude | copilot | gemini | auto"),
+                ("--dry-run", "Show what would be imported without writing"),
+            ],
+            "examples": [
+                ("co import", "Import from all detected files"),
+                ("co import --dry-run", "Preview import"),
+                ("co import -s claude", "Import only from CLAUDE.md"),
             ],
         },
         "context": {
@@ -853,7 +1083,7 @@ def help(
 
         # Group commands by category
         categories = {
-            "Setup": ["init"],
+            "Setup": ["init", "adapt", "detect", "import"],
             "Protocol Management": ["lint", "diff", "sync", "update-checksums"],
             "Development": ["context", "journal"],
             "Information": ["version", "help"],

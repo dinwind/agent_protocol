@@ -69,19 +69,26 @@ For AI tool-specific config files (GitHub Copilot, Cursor), use **pointer strate
 ## 3. Delivery Quality
 
 ### 3.1 Encoding Standards
+- **Scope**: Applies to the **entire project** (all source, config, docs, and tooling), not only to files under `.agent`.
 - All source code and config files must use **UTF-8** encoding.
 - When reading/writing files, must **explicitly set** encoding to UTF-8. See [core/examples.md](examples.md#1-utf-8-explicit-encoding) for implementation.
 
 ### 3.2 File Naming Convention
 **All** markdown files under `.agent` directory must use **lowercase letters + hyphens** (kebab-case). **No exceptions!**
 
-| Type | Correct ✅ | Wrong ❌ |
-|------|-----------|----------|
+| Type | Correct [OK] | Wrong [X] |
+|------|--------------|------------|
 | Filename | `readme.md`, `start-here.md`, `project-context.md` | `README.md`, `StartHere.md`, `projectContext.md` |
 | Directory | `workflows`, `bug-prevention`, `design-principles` | `Workflows`, `Bug_Prevention`, `DesignPrinciples` |
 
 ### 3.3 Rule Consistency
 All tech stack specs apply to **all** files with relevant extensions in project, regardless of purpose (business, utility, or temporary scripts).
+
+### 3.4 Plain Text Over Emoji (ASCII for Compatibility) ⭐
+- **Scope**: Applies to the **entire project** (rules, docs, logs, terminal output, and any deliverable), not only to `.agent` content.
+- **Required**: Prefer **ASCII** over emoji in rules, documentation, log messages, and terminal output.
+- **Reason**: Ensures compatibility with older terminals, CI logs, cross-platform tools, and environments where emoji may not render or may break parsing.
+- **Allowed**: Plain ASCII symbols (e.g. `*`, `->`, `[OK]`, `(x)`) for emphasis or status; avoid Unicode emoji (e.g. check/cross symbols as emoji).
 
 ---
 
@@ -94,7 +101,8 @@ Always use project root directory as main execution context. Don't arbitrarily s
 In command line, always use **forward slash `/`** as path separator for cross-platform compatibility (Windows and Unix shell).
 
 ### 4.3 Terminal Encoding Convention ⭐
-Terminal output must use **UTF-8 encoding** to prevent non-ASCII character display issues.
+- **Scope**: Applies to the **entire project** (all terminal output from scripts, tools, and commands).
+- Terminal output must use **UTF-8 encoding** to prevent non-ASCII character display issues.
 
 ### 4.4 Incremental Verification
 After each module development, must first verify closed-loop (compile, run, test), confirm functionality before continuing next module.

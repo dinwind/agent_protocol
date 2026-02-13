@@ -30,6 +30,18 @@ pipx inject cokodo-agent httpx
 
 离线使用时执行 `co init --offline` 即可使用内置协议。
 
+### 更新
+
+```bash
+# 使用 pipx 安装时
+pipx upgrade cokodo-agent
+
+# 使用 pip 安装时
+pip install --upgrade cokodo-agent
+```
+
+升级后可用 `co version` 查看 CLI 与内置协议版本。内置协议版本随 PyPI 包发布更新；若需使用**最新协议**（如 GitHub 已发布新版本而 PyPI 未跟进），可联网执行 `co init` 或 `co sync`，会从 GitHub Release 拉取。
+
 ### 快速开始
 
 ```bash
